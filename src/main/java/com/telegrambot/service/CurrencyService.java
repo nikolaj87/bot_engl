@@ -1,5 +1,6 @@
 package com.telegrambot.service;
 
+import com.telegrambot.bot.TelegramBot;
 import com.telegrambot.model.CurrencyModel;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -13,6 +14,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public class CurrencyService {
+    //новое
+    private static TelegramBot bot;
+
+    public CurrencyService(TelegramBot bot) {
+        CurrencyService.bot = bot;
+    }
+    //конец
 
     public static String getCurrencyRate(String message, CurrencyModel model) throws IOException, ParseException {
 
@@ -37,9 +45,18 @@ public class CurrencyService {
             model.setCc(object.getString("cc"));
             model.setExchangedate(object.getString("exchangedate"));
         }
-
-        return "Official exchange rate of 1 " + model.getTxt() + " is " + model.getRate() + " HRN " + " as of " + formattedDate;
+        //новое
+        if (jsonArray.isEmpty()){
+            return "We have not found such a currency." + "\n" +
+                    "Enter the currency whose official exchange rate" + "\n" +
+                    "you want to know in relation to HRN." + "\n" +
+                    "For example: USD $,EUR €,GBP £,KZT ₸,AZN ₼,TRY ₺,PLN zł and many other world currencies";
+        }
+        //конец
+        return "Official exchange rate of " + model.getTxt() + " is " + model.getRate() + " HRN " + " as of " + formattedDate;
     }
+
+
 
 
 }

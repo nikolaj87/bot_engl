@@ -6,10 +6,13 @@ import com.telegrambot.service.CurrencyService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
+import org.telegram.telegrambots.meta.api.methods.groupadministration.SetChatPhoto;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 
@@ -28,6 +31,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         return botConfig.getToken();
     }
 
+
     @Override
     public void onUpdateReceived(Update update) {
         CurrencyModel currencyModel = new CurrencyModel();
@@ -39,7 +43,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
             if (messageText.equals("/start")) {
                 startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
-            } else {
+            }else {
                 try {
                     currency = CurrencyService.getCurrencyRate(messageText, currencyModel);
                 } catch (IOException e) {
@@ -55,11 +59,13 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+
+
     private void startCommandReceived(Long chatId, String name) {
         String answer = "Hi, " + name + ", nice to meet you!" + "\n" +
                 "Enter the currency whose official exchange rate" + "\n" +
                 "you want to know in relation to HRN." + "\n" +
-                "For example: USD $,EUR €,GBP £,KZT ₸,AZN ₼,TRY ₺,PLN zł and many other world currencies";
+                "For example: USD,EUR,GBP,KZT,AZN,TRY,PLN and many other world currencies";
         sendMessage(chatId, answer);
     }
 
