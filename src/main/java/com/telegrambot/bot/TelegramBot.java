@@ -1,14 +1,14 @@
-package bot;
+package com.telegrambot.bot;
 
-import config.BotConfig;
+import com.telegrambot.config.BotConfig;
+import com.telegrambot.model.CurrencyModel;
+import com.telegrambot.service.CurrencyService;
 import lombok.AllArgsConstructor;
-import model.CurrencyModel;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import service.CurrencyService;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -37,22 +37,20 @@ public class TelegramBot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            switch (messageText) {
-                case "/start":
-                    startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
-                    break;
-                default:
-                    try {
-                        currency = CurrencyService.getCurrencyRate(messageText, currencyModel);
-                    } catch (IOException e) {
-                        sendMessage(chatId, "We have not found such a currency." + "\n" +
-                                "Enter the currency whose official exchange rate" + "\n" +
-                                "you want to know in relation to HRN." + "\n" +
-                                "For example: USD");
-                    } catch (ParseException e) {
-                        throw new RuntimeException("Unable to parse date");
-                    }
-                    sendMessage(chatId, currency);
+            if (messageText.equals("/start")) {
+                startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+            } else {
+                try {
+                    currency = CurrencyService.getCurrencyRate(messageText, currencyModel);
+                } catch (IOException e) {
+                    sendMessage(chatId, "We have not found such a currency." + "\n" +
+                            "Enter the currency whose official exchange rate" + "\n" +
+                            "you want to know in relation to HRN." + "\n" +
+                            "For example: USD $,EUR €,GBP £,KZT ₸,AZN ₼,TRY ₺,PLN zł and many other world currencies");
+                } catch (ParseException e) {
+                    throw new RuntimeException("Unable to parse date");
+                }
+                sendMessage(chatId, currency);
             }
         }
     }
@@ -61,7 +59,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         String answer = "Hi, " + name + ", nice to meet you!" + "\n" +
                 "Enter the currency whose official exchange rate" + "\n" +
                 "you want to know in relation to HRN." + "\n" +
-                "For example: USD";
+                "For example: USD $,EUR €,GBP £,KZT ₸,AZN ₼,TRY ₺,PLN zł and many other world currencies";
         sendMessage(chatId, answer);
     }
 
@@ -72,7 +70,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-
+            e.printStackTrace();
         }
     }
 }
