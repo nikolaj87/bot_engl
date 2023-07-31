@@ -14,19 +14,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
 
 public class CurrencyService {
-    //новое
-    private static TelegramBot bot;
 
-    public CurrencyService(TelegramBot bot) {
-        CurrencyService.bot = bot;
-    }
-    //конец
 
     public static String getCurrencyRate(String message, CurrencyModel model) throws IOException, ParseException {
 
         LocalDate currentDate = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         String formattedDate = currentDate.format(formatter);
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String formattedDateForUser = currentDate.format(dateFormatter);
 
         URL url = new URL("https://bank.gov.ua/NBUStatService/v1/statdirectory/exchangenew?valcode="
                 + message + "&date=" + formattedDate + "&json");
@@ -53,7 +50,7 @@ public class CurrencyService {
                     "For example: USD $,EUR €,GBP £,KZT ₸,AZN ₼,TRY ₺,PLN zł and many other world currencies";
         }
         //конец
-        return "Official exchange rate of " + model.getTxt() + " is " + model.getRate() + " HRN " + " as of " + formattedDate;
+        return "Official exchange rate of " + model.getCc() + " is " + model.getRate() + " HRN" + " as of " + formattedDateForUser;
     }
 
 
