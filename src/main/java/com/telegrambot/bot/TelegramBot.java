@@ -1,24 +1,18 @@
 package com.telegrambot.bot;
 
 import com.telegrambot.config.BotConfig;
-import com.telegrambot.model.CurrencyModel;
 import com.telegrambot.service.CurrencyService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
-import org.telegram.telegrambots.meta.api.methods.groupadministration.SetChatPhoto;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
-import java.io.File;
-import java.io.IOException;
-import java.text.ParseException;
 
 @Component
 @AllArgsConstructor
 public class TelegramBot extends TelegramLongPollingBot {
+    private CurrencyService currencyService;
     private final BotConfig botConfig;
 
     @Override
@@ -34,49 +28,19 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        CurrencyModel currencyModel = new CurrencyModel();
-        String currency = "";
-
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            String messageText = update.getMessage().getText();
-            long chatId = update.getMessage().getChatId();
-
-            if (messageText.equals("/start")) {
-                startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
-            }else {
-                try {
-                    currency = CurrencyService.getCurrencyRate(messageText, currencyModel);
-                } catch (IOException e) {
-                    sendMessage(chatId, "We have not found such a currency." + "\n" +
-                            "Enter the currency whose official exchange rate" + "\n" +
-                            "you want to know in relation to HRN." + "\n" +
-                            "For example: USD $,EUR €,GBP £,KZT ₸,AZN ₼,TRY ₺,PLN zł and many other world currencies");
-                } catch (ParseException e) {
-                    throw new RuntimeException("Unable to parse date");
-                }
-                sendMessage(chatId, currency);
-            }
-        }
-    }
-
-
-
-    private void startCommandReceived(Long chatId, String name) {
-        String answer = "Hi, " + name + ", nice to meet you!" + "\n" +
-                "Enter the currency whose official exchange rate" + "\n" +
-                "you want to know in relation to HRN." + "\n" +
-                "For example: USD,EUR,GBP,KZT,AZN,TRY,PLN and many other world currencies";
-        sendMessage(chatId, answer);
-    }
-
-    private void sendMessage(Long chatId, String textToSend) {
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(String.valueOf(chatId));
-        sendMessage.setText(textToSend);
+        SendMessage sendMessage = currencyService.handleUpdate(update);
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+
+
     }
+
+
+
+
+
+
 }

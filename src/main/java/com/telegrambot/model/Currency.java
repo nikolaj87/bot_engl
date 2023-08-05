@@ -2,10 +2,12 @@ package com.telegrambot.model;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
-public class CurrencyModel {
+public class Currency {
     private String txt;
-    private double rate;
+    private BigDecimal rate;
     private String cc;
     private String exchangedate;
 
