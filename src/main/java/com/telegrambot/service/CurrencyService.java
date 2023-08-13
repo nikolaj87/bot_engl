@@ -21,7 +21,6 @@ public class CurrencyService {
     private static final int NUMBER_INDEX = 0;
     private static final int CODE_INDEX = 1;
 
-    private static final String START_BUTTON = "/start";
     private static final String ANSWER = " ,hi, nice to meet you!" + "\n" +
             "Enter the currency whose official exchange rate" + "\n" +
             "you want to know in relation to HRN." + "\n" +
@@ -101,7 +100,7 @@ public class CurrencyService {
             String messageText = update.getMessage().getText();
 
 
-            if (messageText.equals(START_BUTTON)) {
+            if (messageText.equals("/start")) {
                 startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
             }
             if (messageText.matches("[A-Za-z]{3}")) {
