@@ -12,6 +12,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 @Component
 @AllArgsConstructor
 public class TelegramBot extends TelegramLongPollingBot {
+
     private CurrencyService currencyService;
     private final BotConfig botConfig;
 
@@ -25,7 +26,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         return botConfig.getToken();
     }
 
-
     @Override
     public void onUpdateReceived(Update update) {
         SendMessage sendMessage = currencyService.handleUpdate(update);
@@ -34,13 +34,5 @@ public class TelegramBot extends TelegramLongPollingBot {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
-
-
     }
-
-
-
-
-
-
 }

@@ -31,7 +31,9 @@ public class CurrencyService {
             "you want to know in relation to HRN." + "\n" +
             "For example: USD $,EUR €,GBP £,KZT ₸,AZN ₼,TRY ₺,PLN zł and many other world currencies";
 
-    public  String getCurrencyRate(String message) throws IOException {
+    private static final String UKRAINIAN_FLAG = "\" HRN\\uD83C\\uDDFA\\uD83C\\uDDE6\"";
+
+    public String getCurrencyRate(String message) throws IOException {
         Currency currency = getCurrency(message);
         String formattedDateForUser = getDateForUser();
 
@@ -45,7 +47,7 @@ public class CurrencyService {
                 formattedDateForUser;
     }
 
-    public Currency getCurrency(String currencyCode) throws IOException{
+    public Currency getCurrency(String currencyCode) throws IOException {
         Currency currency = new Currency();
 
         String formattedDate = getDateForURL();
@@ -67,14 +69,12 @@ public class CurrencyService {
             currency.setCc(object.getString("cc"));
             currency.setExchangedate(object.getString("exchangedate"));
         }
-
-       return currency;
+        return currency;
     }
 
     private static String getDateForURL() {
         LocalDate currentDate = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-
         return currentDate.format(formatter);
     }
 
@@ -87,9 +87,7 @@ public class CurrencyService {
         String result = currentTime.format(dateFormatter);
 
         return result;
-
     }
-
 
     public SendMessage handleUpdate(Update update) {
 
@@ -99,9 +97,8 @@ public class CurrencyService {
         if (update.hasMessage() && update.getMessage().hasText()) {
             String messageText = update.getMessage().getText();
 
-
             if (messageText.equals("/start")) {
-                startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                return startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
             }
             if (messageText.matches("[A-Za-z]{3}")) {
                 try {
@@ -109,9 +106,8 @@ public class CurrencyService {
                 } catch (IOException e) {
                     sendMessage(chatId, NO_SUCH_CURRENCY_MESSAGE);
                 }
-
             }
-            if (messageText.matches("\\d+[:\\s-][A-Za-z]{3}")){
+            if (messageText.matches("\\d+[:\\s-][A-Za-z]{3}")) {
                 try {
                     message = calculateCurrency(messageText);
                 } catch (IOException e) {
@@ -122,21 +118,22 @@ public class CurrencyService {
         return sendMessage(chatId, message);
     }
 
-    private String calculateCurrency(String messageText) throws IOException{
+    private String calculateCurrency(String messageText) throws IOException {
         String formattedDateForUser = getDateForUser();
         String[] numberCodeArray = messageText.split("[:\\s-]");
         int numberOfCurrency = Integer.parseInt(numberCodeArray[NUMBER_INDEX]);
         String currencyCode = numberCodeArray[CODE_INDEX];
         Currency currency = getCurrency(currencyCode);
-        return "Official converted exchange rate of " + numberOfCurrency+ " "+ currency.getCc() + " is " +
-                currency.getRate().multiply(BigDecimal.valueOf(numberOfCurrency))  + " HRN\uD83C\uDDFA\uD83C\uDDE6"
+
+        return "Official converted exchange rate of " + numberOfCurrency + " " + currency.getCc() + " is " +
+                currency.getRate().multiply(BigDecimal.valueOf(numberOfCurrency)) + UKRAINIAN_FLAG
                 + " as of " + "Date: " +
                 formattedDateForUser;
     }
 
-    private void startCommandReceived(Long chatId, String name) {
+    private SendMessage startCommandReceived(Long chatId, String name) {
         String answer = name + ANSWER;
-        sendMessage(chatId, answer);
+        return sendMessage(chatId, answer);
     }
 
     private SendMessage sendMessage(Long chatId, String textToSend) {
