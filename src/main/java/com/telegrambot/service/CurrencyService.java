@@ -31,7 +31,8 @@ public class CurrencyService {
             "you want to know in relation to HRN." + "\n" +
             "For example: USD $,EUR €,GBP £,KZT ₸,AZN ₼,TRY ₺,PLN zł and many other world currencies";
 
-    private static final String UKRAINIAN_FLAG = "\" HRN\\uD83C\\uDDFA\\uD83C\\uDDE6\"";
+    private static final String currencyOfUkraine = "HRN";
+    private static final String UKRAINIAN_FLAG = "\uD83C\uDDFA\uD83C\uDDE6";
 
     public String getCurrencyRate(String message) throws IOException {
         Currency currency = getCurrency(message);
@@ -42,7 +43,7 @@ public class CurrencyService {
         }
 
         return "Official exchange rate of " + currency.getCc() + " is " + currency.getRate() +
-                " HRN\uD83C\uDDFA\uD83C\uDDE6"
+                currencyOfUkraine + UKRAINIAN_FLAG
                 + " as of:  " + "Date: " +
                 formattedDateForUser;
     }
@@ -126,7 +127,7 @@ public class CurrencyService {
         Currency currency = getCurrency(currencyCode);
 
         return "Official converted exchange rate of " + numberOfCurrency + " " + currency.getCc() + " is " +
-                currency.getRate().multiply(BigDecimal.valueOf(numberOfCurrency)) + UKRAINIAN_FLAG
+                currency.getRate().multiply(BigDecimal.valueOf(numberOfCurrency)) + currencyOfUkraine + UKRAINIAN_FLAG
                 + " as of " + "Date: " +
                 formattedDateForUser;
     }
