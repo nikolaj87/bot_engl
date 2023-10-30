@@ -2,6 +2,8 @@ package com.telegrambot.entity;
 
 import jakarta.persistence.*;
 
+
+import java.sql.Timestamp;
 import java.util.Objects;
 import java.util.Set;
 
@@ -12,19 +14,14 @@ public class Student {
     private long id;
     @Column(name = "name")
     private String name;
-//    @OneToMany
-//    private Set<Word> words;
-//    @OneToOne
-//    private HomeTask homeTask;
+    @Column(name = "registered_at")
+    private Timestamp registeredAt;
 
-    public Student(long id, String name, Set<Word> words, HomeTask homeTask) {
+    public Student(long id, String name, Timestamp registeredAt) {
         this.id = id;
         this.name = name;
-//        this.words = words;
-//        this.homeTask = homeTask;
+        this.registeredAt = registeredAt;
     }
-
-
 
     public long getId() {
         return id;
@@ -34,7 +31,6 @@ public class Student {
         this.id = id;
     }
 
-
     public String getName() {
         return name;
     }
@@ -43,8 +39,13 @@ public class Student {
         this.name = name;
     }
 
+    public Timestamp getRegisteredAt() {
+        return registeredAt;
+    }
 
-
+    public void setRegisteredAt(Timestamp registeredAt) {
+        this.registeredAt = registeredAt;
+    }
 
     public Student() {
     }
@@ -67,6 +68,7 @@ public class Student {
         return "Student{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", registeredAt=" + registeredAt +
                 '}';
     }
 }

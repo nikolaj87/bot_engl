@@ -6,25 +6,24 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "home_task")
-public class HomeTask {
+public class Homework {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-    @Column(name = "student_id")
-    private long student_id;
+//    @Column(name = "student_id")
+//    private long studentId;
     @Column(name = "description")
     private String description;
     @Column(name = "is_active")
-    private boolean isActive;
+    private int isActive;
 
-    public HomeTask(long id, long student_id, String description, boolean isActive) {
+    public Homework(long id, String description, int isActive) {
         this.id = id;
-        this.student_id = student_id;
         this.description = description;
         this.isActive = isActive;
     }
 
-    public HomeTask() {
+    public Homework() {
     }
 
     public long getId() {
@@ -35,13 +34,8 @@ public class HomeTask {
         this.id = id;
     }
 
-    public long getStudent_id() {
-        return student_id;
-    }
 
-    public void setStudent_id(long student_id) {
-        this.student_id = student_id;
-    }
+
 
     public String getDescription() {
         return description;
@@ -51,11 +45,11 @@ public class HomeTask {
         this.description = description;
     }
 
-    public boolean isActive() {
+    public int isActive() {
         return isActive;
     }
 
-    public void setActive(boolean active) {
+    public void setActive(int active) {
         isActive = active;
     }
 
@@ -63,20 +57,19 @@ public class HomeTask {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        HomeTask homeTask = (HomeTask) o;
-        return id == homeTask.id && student_id == homeTask.student_id && isActive == homeTask.isActive && Objects.equals(description, homeTask.description);
+        Homework homework = (Homework) o;
+        return id == homework.id && isActive == homework.isActive && Objects.equals(description, homework.description);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, student_id, description, isActive);
+        return Objects.hash(id, description, isActive);
     }
 
     @Override
     public String toString() {
         return "HomeTask{" +
                 "id=" + id +
-                ", student_id=" + student_id +
                 ", description='" + description + '\'' +
                 ", isActive=" + isActive +
                 '}';
