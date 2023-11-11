@@ -8,7 +8,7 @@ import java.util.Random;
 public class MessageGenerator {
 
     private final Random random = new Random();
-    //когда студент пишет что то в чат но уже после урока
+    //когда студент пишет что то в чат но уже после  урока
     private final String[] waitMessages = {
             "see you soon :)",
             "be prepare for the lesson",
