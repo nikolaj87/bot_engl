@@ -1,7 +1,7 @@
 package com.telegrambot.bot;
 
 import com.telegrambot.config.BotConfig;
-import com.telegrambot.generator.MessageGenerator;
+import com.telegrambot.utils.MessageGenerator;
 import com.telegrambot.service.ServiceImpl;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;

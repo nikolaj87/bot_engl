@@ -1,4 +1,4 @@
-package com.telegrambot.generator;
+package com.telegrambot.utils;
 
 import org.springframework.stereotype.Component;
 
