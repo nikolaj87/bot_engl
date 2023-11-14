@@ -33,8 +33,8 @@ public class ServiceImpl implements Service {
     private final StudentRepository studentRepository;
     private final WordRepository wordRepository;
     private final HomeTaskRepository homeTaskRepository;
-    private static long currentStudentId = 5201447988L;
-    private static final long adminId = 5201447988L;
+    private static long currentStudentId = 795942078L;
+    private static final long adminId = 795942078L;
     private static final String UKRAINIAN_FLAG = "\uD83C\uDDFA\uD83C\uDDE6";
 
     public ServiceImpl(Cache cache, CacheList cacheList, MessageGenerator generator, KeyboardGenerator keyGenerator, StudentRepository studentRepository, WordRepository wordRepository, HomeTaskRepository homeTaskRepository) {
