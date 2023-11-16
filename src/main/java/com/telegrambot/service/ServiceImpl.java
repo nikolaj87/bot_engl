@@ -33,8 +33,8 @@ public class ServiceImpl implements Service {
     private final StudentRepository studentRepository;
     private final WordRepository wordRepository;
     private final HomeTaskRepository homeTaskRepository;
-    private static long currentStudentId = 795942078L;
-    private static final long adminId = 795942078L;
+    private static long currentStudentId = 5201447988L;
+    private static final long adminId = 5201447988L;
     private static final String UKRAINIAN_FLAG = "\uD83C\uDDFA\uD83C\uDDE6";
 
     public ServiceImpl(Cache cache, CacheList cacheList, MessageGenerator generator, KeyboardGenerator keyGenerator, StudentRepository studentRepository, WordRepository wordRepository, HomeTaskRepository homeTaskRepository) {
@@ -218,7 +218,7 @@ public class ServiceImpl implements Service {
         }
         String wordEnglish = text.substring(1, text.lastIndexOf("+")).trim().toLowerCase();
         String wordOrigin = text.substring(text.lastIndexOf("+") + 1).trim().toLowerCase();
-        Word word = new Word(0L, wordEnglish, wordOrigin, currentStudentId, new Timestamp(System.currentTimeMillis()));
+        Word word = new Word(0L, wordEnglish, wordOrigin, currentStudentId, new Timestamp(System.currentTimeMillis()), 1);
         wordRepository.save(word);
         SendMessage studentMessage = new SendMessage(String.valueOf(currentStudentId), wordOrigin + " - a new word to learn");
         SendMessage adminMessage = new SendMessage(String.valueOf(adminId), "новое слово сохранено: " + wordEnglish + " = " + wordOrigin);

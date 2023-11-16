@@ -22,7 +22,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final BotConfig botConfig;
     private final ServiceImpl service;
     private final MessageGenerator generator;
-    private static final long adminId = 795942078L;
+    private static final long adminId = 5201447988L;
     private static final String REG_EX_ADD_WORD = "\\+.{2,}\\+.{2,}";       //  +...+...
 
     public TelegramBot(BotConfig botConfig, ServiceImpl service, MessageGenerator generator) {
@@ -120,7 +120,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 return service.switchStudent(data);
             }
         }
-        return List.of(new SendMessage("795942078", generator.waitMessage()));
+        return List.of(new SendMessage("5201447988", generator.waitMessage()));
     }
 
     private void sendMessages(List<SendMessage> messages) {

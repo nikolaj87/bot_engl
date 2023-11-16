@@ -19,13 +19,16 @@ public class Word {
     private long studentId;
     @Column(name = "created_at")
     private Timestamp createdAt;
+    @Column(name = "category")
+    private int category;
 
-    public Word(long id, String wordEnglish, String wordOriginal, long studentId, Timestamp createdAt) {
+    public Word(long id, String wordEnglish, String wordOriginal, long studentId, Timestamp createdAt, int category) {
         this.id = id;
         this.wordEnglish = wordEnglish;
         this.wordOriginal = wordOriginal;
         this.studentId = studentId;
         this.createdAt = createdAt;
+        this.category = category;
     }
 
     public Word() {
@@ -71,6 +74,14 @@ public class Word {
         this.studentId = studentId;
     }
 
+    public int getCategory() {
+        return category;
+    }
+
+    public void setCategory(int category) {
+        this.category = category;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -92,6 +103,7 @@ public class Word {
                 ", wordOriginal='" + wordOriginal + '\'' +
                 ", studentId=" + studentId +
                 ", createdAt=" + createdAt +
+                ", category=" + category +
                 '}';
     }
 }
