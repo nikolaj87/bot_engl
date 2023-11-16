@@ -29,10 +29,10 @@ public class MessageGenerator {
     };
     //студент дал неправильный ответ
     private final String[] wrongMessages = {
-            "no, no, no!",
-            "wrong!",
-            "try again",
-            "unfortunately, no"
+            "no, no, no!\n",
+            "wrong!\n",
+            "try again.\n",
+            "unfortunately, no.\n"
     };
     //бот просит студента перевести фразу
     private final String[] askMessages = {
@@ -46,10 +46,8 @@ public class MessageGenerator {
     };
     //бот напоминает что нужно сделать домашнее задание
     private final String[] homeworkRemind = {
-            "Remember about your homework: ",
-            "Just a reminder about your homework: ",
-            "Please, keep in mind to do your hometask: ",
-            "Don't forget to do your hometask: "
+            "Have you done your homework? ",
+            "Is the homework done?: "
     };
     //это студент не получает это не важно
     private final String commandsMessage = "+english text+оригинальный текст \nпробелы вокруг + не важны \n\nhwhw домашняя работа\nрегистр не важен";
