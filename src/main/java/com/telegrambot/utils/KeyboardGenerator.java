@@ -4,6 +4,7 @@ import com.telegrambot.entity.Student;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
@@ -16,6 +17,8 @@ import java.util.List;
 public class KeyboardGenerator {
     private final ReplyKeyboardMarkup replyKeyboardMarkup;
     private final InlineKeyboardMarkup inlineKeyboardMarkup;
+    private final String speaker = "🔊";
+
 
     {
         ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
@@ -102,5 +105,25 @@ public class KeyboardGenerator {
         SendMessage studentsForAdmin = new SendMessage(String.valueOf(adminId), String.valueOf(messageForAdmin));
         studentsForAdmin.setReplyMarkup(keyboardMarkup);
         return List.of(studentsForAdmin);
+    }
+
+    public ReplyKeyboard getAllWordButtons(String englishWord) {
+        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+        InlineKeyboardButton toArchive = new InlineKeyboardButton("<<to archive");
+        InlineKeyboardButton listen = new InlineKeyboardButton("listen  " + speaker);
+        toArchive.setCallbackData("toArchive" + englishWord);
+        listen.setCallbackData("listen");
+        keyboardMarkup.setKeyboard(List.of(List.of(toArchive, listen)));
+        return keyboardMarkup;
+    }
+
+    public ReplyKeyboard getArchiveWordButtons(String englishWord) {
+        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+        InlineKeyboardButton listen = new InlineKeyboardButton("listen  " + speaker);
+        InlineKeyboardButton toList = new InlineKeyboardButton("to list>>");
+        toList.setCallbackData("toList" + englishWord);
+        listen.setCallbackData("listen");
+        keyboardMarkup.setKeyboard(List.of(List.of(listen, toList)));
+        return keyboardMarkup;
     }
 }

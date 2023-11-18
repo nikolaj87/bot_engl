@@ -8,7 +8,10 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendVoice;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.Voice;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -22,7 +25,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final BotConfig botConfig;
     private final ServiceImpl service;
     private final MessageGenerator generator;
-    private static final long adminId = 5201447988L;
+    private static final long adminId = 795942078L;
     private static final String REG_EX_ADD_WORD = "\\+.{2,}\\+.{2,}";       //  +...+...
 
     public TelegramBot(BotConfig botConfig, ServiceImpl service, MessageGenerator generator) {
@@ -30,12 +33,13 @@ public class TelegramBot extends TelegramLongPollingBot {
         this.service = service;
         this.generator = generator;
         List<BotCommand> commandList = new ArrayList<>();
+        commandList.add(new BotCommand("/switch_student", "admin switch student"));
+        commandList.add(new BotCommand("/my_words", "ALL WORDS"));
+        commandList.add(new BotCommand("/last_words", "NEW WORDS"));
+        commandList.add(new BotCommand("/archive", "ARCHIVE"));
+        commandList.add(new BotCommand("/stop", "stop studying words"));
         commandList.add(new BotCommand("/start", "update alexandra_english_bot"));
-        commandList.add(new BotCommand("/switch_student", "ADMIN switch student"));
-        commandList.add(new BotCommand("/commands", "ADMIN remind commands"));
-        commandList.add(new BotCommand("/my_words", "study all your words"));
-        commandList.add(new BotCommand("/last_words", "study last 14-day words"));
-        commandList.add(new BotCommand("/stop", "stop study words"));
+        commandList.add(new BotCommand("/commands", "admin remind commands"));
         try {
             this.execute(new SetMyCommands(commandList, new BotCommandScopeDefault(), null));
         }
@@ -100,6 +104,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                 if (messageText.equals("/my_words")) {
                     return service.studyAllButton(chatId, messageText);
                 }
+                if (messageText.equals("/archive")) {
+                    return service.studyArchiveButton(chatId, messageText);
+                }
                 if (messageText.equals("/stop")) {
                     return service.clearCache(chatId);
                 }
@@ -119,8 +126,17 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (data.startsWith("student")) {
                 return service.switchStudent(data);
             }
+            if (data.startsWith("toArchive")) {
+                return service.wordToArchive(studentId, data.substring(9));
+            }
+            if (data.startsWith("toList")) {
+                return service.wordToList(studentId, data.substring(6));
+            }
+            if (data.equals("listen")) {
+                return service.wordListen(studentId);
+            }
         }
-        return List.of(new SendMessage("5201447988", generator.waitMessage()));
+        return List.of(new SendMessage("795942078", generator.waitMessage()));
     }
 
     private void sendMessages(List<SendMessage> messages) {

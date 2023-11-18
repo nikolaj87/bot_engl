@@ -19,16 +19,16 @@ public class Word {
     private long studentId;
     @Column(name = "created_at")
     private Timestamp createdAt;
-    @Column(name = "category")
-    private int category;
+    @Column(name = "is_archive")
+    private int isArchive;
 
-    public Word(long id, String wordEnglish, String wordOriginal, long studentId, Timestamp createdAt, int category) {
+    public Word(long id, String wordEnglish, String wordOriginal, long studentId, Timestamp createdAt, int isArchive) {
         this.id = id;
         this.wordEnglish = wordEnglish;
         this.wordOriginal = wordOriginal;
         this.studentId = studentId;
         this.createdAt = createdAt;
-        this.category = category;
+        this.isArchive = isArchive;
     }
 
     public Word() {
@@ -74,12 +74,12 @@ public class Word {
         this.studentId = studentId;
     }
 
-    public int getCategory() {
-        return category;
+    public int getIsArchive() {
+        return isArchive;
     }
 
-    public void setCategory(int category) {
-        this.category = category;
+    public void setIsArchive(int category) {
+        this.isArchive = category;
     }
 
     @Override
@@ -103,7 +103,7 @@ public class Word {
                 ", wordOriginal='" + wordOriginal + '\'' +
                 ", studentId=" + studentId +
                 ", createdAt=" + createdAt +
-                ", category=" + category +
+                ", category=" + isArchive +
                 '}';
     }
 }

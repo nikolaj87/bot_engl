@@ -33,4 +33,12 @@ public interface Service {
     List<SendMessage> getCommands();
     @Transactional
     List<SendMessage> clearCache(long chatId);
+    @Transactional
+    List<SendMessage> studyArchiveButton(long chatId, String messageText);
+    @Transactional
+    List<SendMessage> wordToArchive(long studentId, String word);
+    @Transactional
+    List<SendMessage> wordToList(long studentId, String word);
+    @Transactional
+    List<SendMessage> wordListen(long studentId);
 }

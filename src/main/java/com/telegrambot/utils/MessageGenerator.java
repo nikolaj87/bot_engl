@@ -31,12 +31,12 @@ public class MessageGenerator {
     private final String[] wrongMessages = {
             "no, no, no!",
             "wrong!",
-            "try again",
-            "unfortunately, no"
+            "try again.",
+            "unfortunately, no."
     };
     //бот просит студента перевести фразу
     private final String[] askMessages = {
-            "translate, please - ",
+            "translate please - ",
             "how do you say in English - ",
             "what's the English for - "
     };
