@@ -89,7 +89,8 @@ public class KeyboardGenerator {
                     .append(allStudents.get(i - 1).getName())
                     .append("\n");
             button = new InlineKeyboardButton(String.valueOf(i));
-            button.setCallbackData("student" + allStudents.get(i - 1).getId());
+            Student student = allStudents.get(i - 1);
+            button.setCallbackData("student" + student.getId() + " " + student.getName());
             buttonRow.add(button);
 
             if (i % 4 == 0) {

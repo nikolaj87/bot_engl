@@ -117,7 +117,7 @@ public class ServiceImpl implements Service {
 
         List<Student> allStudents = studentRepository.findAll();
         allStudents.stream()
-                .filter(student -> student.getId() != currentStudentId)
+                .filter(student -> student.getId() != currentStudentId && student.getId() != adminId)
                 .forEach(student -> {
                     Optional<Word> anyWordOptional = wordRepository.getAnyWordByStudentId(student.getId());
                     if (anyWordOptional.isPresent()) {
@@ -134,7 +134,7 @@ public class ServiceImpl implements Service {
     @Override
     public List<SendMessage> handleStudentMessage(long studentId, String messageText) {
         //если учитель выбрал данного студента то идет урок и учитель получает сообщения студента
-        if (studentId == currentStudentId) {
+        if (studentId == currentStudentId && adminId != currentStudentId) {
             return List.of(new SendMessage(String.valueOf(adminId), messageText));
         }
         //если в кеше нет вопроса к студенту - пускай ждет урока. Даем wait message
@@ -237,7 +237,7 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyNewButton(long chatId, String messageText) {
-        if (chatId == currentStudentId) {
+        if (chatId == currentStudentId && adminId != currentStudentId) {
             return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
         }
         List<Word> allNewWords = wordRepository.getAllNewWords(chatId);
@@ -253,7 +253,7 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyAllButton(long chatId, String messageText) {
-        if (chatId == currentStudentId) {
+        if (chatId == currentStudentId && adminId != currentStudentId) {
             return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
         }
         List<Word> allWords = wordRepository.getAllStudentWords(chatId);
@@ -271,7 +271,7 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyArchiveButton(long chatId, String messageText) {
-        if (chatId == currentStudentId) {
+        if (chatId == currentStudentId && adminId != currentStudentId) {
             return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
         }
         List<Word> allWords = wordRepository.getArchiveStudentWords(chatId);
@@ -296,14 +296,14 @@ public class ServiceImpl implements Service {
     public List<SendMessage> wordToArchive(long studentId, String word) {
 //        String wordToArchive = cache.get(studentId).substring(1);
         wordRepository.wordToArchive(studentId, word);
-        return List.of(new SendMessage(String.valueOf(studentId), "moved to archive"));
+        return List.of(new SendMessage(String.valueOf(studentId), "\"" + word + "\" moved to archive"));
     }
 
     @Override
     public List<SendMessage> wordToList(long studentId, String word) {
 //        String wordToArchive = cache.get(studentId).substring(1);
         wordRepository.wordToList(studentId, word);
-        return List.of(new SendMessage(String.valueOf(studentId), "moved to list"));
+        return List.of(new SendMessage(String.valueOf(studentId), "\"" + word + "\" moved to list"));
     }
 
     @Override
@@ -325,9 +325,9 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> addWord(String text) {
-        if (currentStudentId == adminId) {
-            return List.of(new SendMessage(String.valueOf(adminId), "себе нельзя сохранять слова, выбери студента"));
-        }
+//        if (currentStudentId == adminId) {
+//            return List.of(new SendMessage(String.valueOf(adminId), "себе нельзя сохранять слова, выбери студента"));
+//        }
         String wordEnglish = text.substring(1, text.lastIndexOf("+")).trim().toLowerCase();
         String wordOrigin = text.substring(text.lastIndexOf("+") + 1).trim().toLowerCase();
         Word word = new Word(0L, wordEnglish, wordOrigin, currentStudentId, new Timestamp(System.currentTimeMillis()), 0);
@@ -359,9 +359,11 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> switchStudent(String text) {
-        String studentId = text.substring(7);
+        String studentId = text.substring(7, text.indexOf(" "));
+        String studentName = text.substring(text.indexOf(" ")).toUpperCase();
         currentStudentId = Long.parseLong(studentId);
-        SendMessage adminMessage = new SendMessage(String.valueOf(adminId), "переключено на нового студента! Теперь он получает прямые сообщения и можно сохранить для него слова и домашку");
+        SendMessage adminMessage = new SendMessage(String.valueOf(adminId), "переключено на студента" + studentName +
+                "\nТеперь он получает прямые сообщения и можно сохранить для него слова и домашку");
         SendMessage studentMessage = new SendMessage(String.valueOf(currentStudentId), generator.teacherEntersChat());
         System.out.println(currentStudentId);
         return List.of(adminMessage, studentMessage);

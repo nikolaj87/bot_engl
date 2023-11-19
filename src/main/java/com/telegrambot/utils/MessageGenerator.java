@@ -52,7 +52,7 @@ public class MessageGenerator {
             "Don't forget to do your hometask: "
     };
     //это студент не получает это не важно
-    private final String commandsMessage = "+english text+оригинальный текст \nпробелы вокруг + не важны \n\nhwhw домашняя работа\nрегистр не важен";
+    private final String commandsMessage = "+иностранный язык +родной язык  \nпробелы вокруг + не важны \n\nhwhw домашняя работа\nрегистр не важен";
 
     //студент не сделал домашку и бот говорит ему ок я напомню тебе завтра
     private final String[] remindTomorrowHomework = {

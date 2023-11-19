@@ -42,8 +42,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         commandList.add(new BotCommand("/commands", "admin remind commands"));
         try {
             this.execute(new SetMyCommands(commandList, new BotCommandScopeDefault(), null));
-        }
-        catch (TelegramApiException e) {
+        } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
@@ -87,34 +86,30 @@ public class TelegramBot extends TelegramLongPollingBot {
                 if (messageText.toLowerCase().startsWith("hwhw")) {
                     return service.addHomeTask(chatId, messageText);
                 }
-                if (messageText.equals("/start")) {
-                    return service.initializeNewStudent(update, chatId);
-                }
                 if (messageText.equals("/switch_student")) {
                     return service.getAllStudents(update);
                 }
                 if (messageText.equals("/commands")) {
                     return service.getCommands();
                 }
-                return List.of(new SendMessage(String.valueOf(ServiceImpl.getStudentId()), messageText));
-            } else {
-                if (messageText.equals("/last_words")) {
-                    return service.studyNewButton(chatId, messageText);
-                }
-                if (messageText.equals("/my_words")) {
-                    return service.studyAllButton(chatId, messageText);
-                }
-                if (messageText.equals("/archive")) {
-                    return service.studyArchiveButton(chatId, messageText);
-                }
-                if (messageText.equals("/stop")) {
-                    return service.clearCache(chatId);
-                }
-                if (messageText.equals("/start")) {
-                    return service.initializeNewStudent(update, chatId);
-                }
-                return service.handleStudentMessage(chatId, messageText);
+//                return List.of(new SendMessage(String.valueOf(ServiceImpl.getStudentId()), messageText));
             }
+            if (messageText.equals("/last_words")) {
+                return service.studyNewButton(chatId, messageText);
+            }
+            if (messageText.equals("/my_words")) {
+                return service.studyAllButton(chatId, messageText);
+            }
+            if (messageText.equals("/archive")) {
+                return service.studyArchiveButton(chatId, messageText);
+            }
+            if (messageText.equals("/stop")) {
+                return service.clearCache(chatId);
+            }
+            if (messageText.equals("/start")) {
+                return service.initializeNewStudent(update, chatId);
+            }
+            return service.handleStudentMessage(chatId, messageText);
         }
         if (update.hasCallbackQuery()) {
             long studentId = update.getCallbackQuery().getFrom().getId();
@@ -136,16 +131,19 @@ public class TelegramBot extends TelegramLongPollingBot {
                 return service.wordListen(studentId);
             }
         }
-        return List.of(new SendMessage("795942078", generator.waitMessage()));
+//        return List.of(new SendMessage("795942078", generator.waitMessage()));
+        return null;
     }
 
     private void sendMessages(List<SendMessage> messages) {
-        messages.forEach(message -> {
-            try {
-                execute(message);
-            } catch (TelegramApiException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        if (messages != null) {
+            messages.forEach(message -> {
+                try {
+                    execute(message);
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
     }
 }
