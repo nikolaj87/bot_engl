@@ -40,5 +40,10 @@ public interface WordRepository extends JpaRepository<Word, Long> {
     @Modifying
     @Query(value = "UPDATE word SET is_archive = '0' WHERE student_id = :studentId AND word_english = :word", nativeQuery = true)
     void wordToList (long studentId, String word);
-//    List<Word> getAllByStudentIdAndAndCreatedAt (long studentId, Timestamp timestamp);
+
+    @Query(value = "SELECT * FROM (SELECT * FROM word WHERE student_id = :studentId ORDER BY created_at DESC LIMIT 30) AS last30 ORDER BY created_at ASC", nativeQuery = true)
+    List<Word> getLast30Words(long studentId);
+
+
+    //    List<Word> getAllByStudentIdAndAndCreatedAt (long studentId, Timestamp timestamp);
 }

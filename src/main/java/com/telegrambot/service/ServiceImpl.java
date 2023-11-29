@@ -75,10 +75,10 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> handleHomeworkReply(long studentId, String reply) {
-        if (!cache.cacheCheck(studentId)) {
-            return List.of(new SendMessage(String.valueOf(studentId), generator.waitMessage()));
-        }
-        cache.remove(studentId);
+//        if (!cache.cacheCheck(studentId)) {
+//            return List.of(new SendMessage(String.valueOf(studentId), generator.waitMessage()));
+//        }
+//        cache.remove(studentId);
         if (reply.equals("hwYes")) {
             homeTaskRepository.updateHomeTaskByIdSetIsActiveFalse(studentId);
             return List.of(new SendMessage(String.valueOf(studentId), generator.correctMessage()));
@@ -98,7 +98,7 @@ public class ServiceImpl implements Service {
             if (homeworkOptional.isPresent()) {
                 if (homeworkOptional.get().isActive() == 1) {
                     String description = homeworkOptional.get().getDescription();
-                    cache.put(student.getId(), "home");
+//                    cache.put(student.getId(), "home");
                     var message = new SendMessage(String.valueOf(student.getId()), generator.getHomeworkRemind() + description);
                     message.setReplyMarkup(keyGenerator.getYesNoBoard());
                     messages.add(message);
@@ -134,6 +134,7 @@ public class ServiceImpl implements Service {
     @Override
     public List<SendMessage> handleStudentMessage(long studentId, String messageText) {
         //если учитель выбрал данного студента то идет урок и учитель получает сообщения студента
+        //также учитель сам себе не отправляет свои сообщения
         if (studentId == currentStudentId && adminId != currentStudentId) {
             return List.of(new SendMessage(String.valueOf(adminId), messageText));
         }
@@ -163,16 +164,19 @@ public class ServiceImpl implements Service {
             if (englishWordCache.startsWith("1")) {
                 List<SendMessage> messages = studyNewButton(studentId, messageText);
                 messagesForStudent.add(messages.get(0));
+                messagesForStudent.add(messages.get(1));
                 return messagesForStudent;
             }
             if (englishWordCache.startsWith("2")) {
                 List<SendMessage> messages = studyAllButton(studentId, messageText);
                 messagesForStudent.add(messages.get(0));
+                messagesForStudent.add(messages.get(1));
                 return messagesForStudent;
             }
             if (englishWordCache.startsWith("3")) {
                 List<SendMessage> messages = studyArchiveButton(studentId, messageText);
                 messagesForStudent.add(messages.get(0));
+                messagesForStudent.add(messages.get(1));
                 return messagesForStudent;
             }
         }
@@ -198,41 +202,7 @@ public class ServiceImpl implements Service {
             messagesForStudent.add(sendMessage);
             return messagesForStudent;
         }
-
-
-//        Matcher matcher = Pattern.compile("[a-z]").matcher(englishWordCache);
-//        if (matcher.find()) {
-//            //если в кеше нижний регистр то я задал вопрос. кеш почишен я ниче не добавляю
-//            if (englishWordCache.equals(messageText.trim().toLowerCase())) {
-//                return List.of(new SendMessage(String.valueOf(studentId), "✅ " + generator.correctMessage()));
-//            } else {
-//                return List.of(new SendMessage(String.valueOf(studentId), "❌ " + generator.wrongMessage() + " Correct answer - " + "✅ " + englishWordCache));
-//            }
-//        } else {
-            //верхний - студент сам запросил слово. я проверю слово создам сообщение успех или неуспех
-            //запрошу новое слово из листКэша.
-            //найду в нем любое слово и создам еще одно сообщение. Помещу это слово в кеш РЕГИСТР. верну 2 собщения
-//            List<SendMessage> messagesForStudent = new ArrayList<>();
-//            if (englishWordCache.equals(messageText.trim().toUpperCase())) {
-//                messagesForStudent.add(new SendMessage(String.valueOf(studentId), "✅ " + generator.correctMessage()));
-//            } else {
-//                messagesForStudent.add(new SendMessage(String.valueOf(studentId), "❌ " + generator.wrongMessage() + " Correct answer - " + "✅ " + englishWordCache));
-//            }
-//            if (cacheList.isEmpty(studentId)) {
-//                //***** запускаю сервис по обработке кнопки ласт вордс
-//                //я говорю что слов больше нет пусть заново загружает слова
-////                List<SendMessage> messages = studyAllButton(studentId, messageText);
-////                messagesForStudent.add(messages.get(0));
-//                messagesForStudent.add(new SendMessage(String.valueOf(studentId), "end of list;-) see you later!"));
-//                return messagesForStudent;
-//            }
-//            Word anyWord = cacheList.getAndDelete(studentId);
-//            cache.put(studentId, anyWord.getWordEnglish().toUpperCase());
-//            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
-//            sendMessage.setReplyMarkup(keyGenerator.getWordButtons());
-//            messagesForStudent.add(sendMessage);
-            return messagesForStudent;
-//        }
+        return messagesForStudent;
     }
 
     @Override
@@ -246,7 +216,9 @@ public class ServiceImpl implements Service {
             //c помошью кеша я буду отличать какие слова там лежат
             //если это слово имеет приставку 1 то это новые слова
             cache.put(chatId, "1" + anyWordFromList.getWordEnglish());
-            return List.of(new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWordFromList.getWordOriginal()));
+            SendMessage number = new SendMessage(String.valueOf(chatId), allNewWords.size() + " words found");
+            SendMessage someWord = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWordFromList.getWordOriginal());
+            return List.of(number, someWord);
         }
         return List.of(new SendMessage(String.valueOf(chatId), "you haven`t new words :("));
     }
@@ -262,9 +234,10 @@ public class ServiceImpl implements Service {
             //c помошью кеша я буду отличать какие слова там лежат
             //если это слово имеет приставку 2 то это все слова
             cache.put(chatId, "2" + anyWord.getWordEnglish());
+            SendMessage number = new SendMessage(String.valueOf(chatId), allWords.size() + " words found");
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
             sendMessage.setReplyMarkup(keyGenerator.getAllWordButtons(anyWord.getWordEnglish()));
-            return List.of(sendMessage);
+            return List.of(number, sendMessage);
         }
         return List.of(new SendMessage(String.valueOf(chatId), "you have 0 words :("));
     }
@@ -274,15 +247,16 @@ public class ServiceImpl implements Service {
         if (chatId == currentStudentId && adminId != currentStudentId) {
             return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
         }
-        List<Word> allWords = wordRepository.getArchiveStudentWords(chatId);
-        if (!allWords.isEmpty()) {
-            Word anyWord = cacheList.putAndReturnAny(chatId, allWords);
+        List<Word> archiveWords = wordRepository.getArchiveStudentWords(chatId);
+        if (!archiveWords.isEmpty()) {
+            Word anyWord = cacheList.putAndReturnAny(chatId, archiveWords);
             //c помошью кеша я буду отличать какие слова там лежат
             //если это слово имеет приставку 3 то это слова из архива
             cache.put(chatId, "3" + anyWord.getWordEnglish());
+            SendMessage number = new SendMessage(String.valueOf(chatId), archiveWords.size() + " words found");
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
             sendMessage.setReplyMarkup(keyGenerator.getArchiveWordButtons(anyWord.getWordEnglish()));
-            return List.of(sendMessage);
+            return List.of(number, sendMessage);
         }
         return List.of(new SendMessage(String.valueOf(chatId), "you haven`t words in archive :("));
     }
@@ -312,8 +286,36 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public List<SendMessage> getCommands() {
-        return List.of(new SendMessage(String.valueOf(adminId), generator.commandsMessage()));
+    public List<SendMessage> deleteById(String request) {
+        String wordIdString = request.replaceAll("\\D", "");
+        long wordId = Long.parseLong(wordIdString);
+        Optional<Word> word = wordRepository.findById(wordId);
+        if (word.isEmpty()) {
+            return List.of(new SendMessage(String.valueOf(adminId), "нет такого Id - " + wordId));
+        } else {
+            wordRepository.deleteById(wordId);
+            SendMessage message = new SendMessage(String.valueOf(adminId), "слово " + word.get().getWordEnglish() +
+                    " удалено");
+            return List.of(message);
+        }
+    }
+
+    @Override
+    public List<SendMessage> getLastWords() {
+        List<Word> lastWords = wordRepository.getLast30Words(currentStudentId);
+        if (lastWords.isEmpty()) {
+            return List.of(new SendMessage(String.valueOf(adminId), "found 0 words"));
+        }
+        StringBuilder reply = new StringBuilder();
+        for (Word word : lastWords) {
+            reply.append(word.getId());
+            reply.append(". ");
+            reply.append(word.getWordEnglish());
+            reply.append(" - ");
+            reply.append(word.getWordOriginal());
+            reply.append("\n");
+        }
+        return List.of(new SendMessage(String.valueOf(adminId), reply.toString()));
     }
 
     @Override
@@ -324,31 +326,48 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public List<SendMessage> addWord(String text) {
+    public List<SendMessage> addWord(String text, long currentId) {
 //        if (currentStudentId == adminId) {
 //            return List.of(new SendMessage(String.valueOf(adminId), "себе нельзя сохранять слова, выбери студента"));
 //        }
         String wordEnglish = text.substring(1, text.lastIndexOf("+")).trim().toLowerCase();
         String wordOrigin = text.substring(text.lastIndexOf("+") + 1).trim().toLowerCase();
-        Word word = new Word(0L, wordEnglish, wordOrigin, currentStudentId, new Timestamp(System.currentTimeMillis()), 0);
+        Word word = new Word(0L, wordEnglish, wordOrigin, currentId, new Timestamp(System.currentTimeMillis()), 0);
+        List<SendMessage> messages = new ArrayList<>();
+        if (currentId == adminId) {
+            messages.add(new SendMessage(String.valueOf(currentStudentId), wordOrigin + " - a new word to learn"));
+            messages.add(new SendMessage(String.valueOf(adminId), "новое слово сохранено: " + wordEnglish + " = " + wordOrigin));
+            word.setStudentId(currentStudentId);
+        } else {
+            messages.add(new SendMessage(String.valueOf(currentId), "a new word saved:\n" + wordEnglish + " = " + wordOrigin));
+        }
         wordRepository.save(word);
-        SendMessage studentMessage = new SendMessage(String.valueOf(currentStudentId), wordOrigin + " - a new word to learn");
-        SendMessage adminMessage = new SendMessage(String.valueOf(adminId), "новое слово сохранено: " + wordEnglish + " = " + wordOrigin);
-        return List.of(studentMessage, adminMessage);
+        return messages;
     }
 
     @Override
     public List<SendMessage> initializeNewStudent(Update update, long currentId) {
         Student student = new Student(update.getMessage().getChatId(), update.getMessage().getFrom().getFirstName(),
                 new Timestamp(System.currentTimeMillis()));
+        List<SendMessage> messages = new ArrayList<>();
         if (studentRepository.findById(currentId).isEmpty()) {
             studentRepository.save(student);
+            SendMessage adminMessage = new SendMessage(String.valueOf(adminId), "студент запустил english_bot! id = " +
+                    student.getId() + " имя = " + student.getName());
+            messages.add(adminMessage);
         }
-        SendMessage adminMessage = new SendMessage(String.valueOf(adminId), "студент запустил или ОБНОВИЛ english_bot! id = " +
-                student.getId() + " имя = " + student.getName());
-        SendMessage studentMessage = new SendMessage(String.valueOf(currentId), "welcome to alexandra_english_bot!:) \nV.1.1.0");
-//        studentMessage.setReplyMarkup(keyGenerator.getMainMenuKeyboard());
-        return List.of(adminMessage, studentMessage);
+        SendMessage versionMessage = new SendMessage(String.valueOf(currentId), "welcome to alexandra_english_bot!:) \nV.1.1.3");
+        SendMessage rusMessage = new SendMessage(String.valueOf(currentId), generator.rusMessage());
+        SendMessage ukrMessage = new SendMessage(String.valueOf(currentId), generator.ukrMessage());
+        SendMessage polMessage = new SendMessage(String.valueOf(currentId), generator.polMessage());
+        messages.add(versionMessage);
+        messages.add(rusMessage);
+        messages.add(ukrMessage);
+        messages.add(polMessage);
+        if (currentId == adminId) {
+            messages.add(new SendMessage(String.valueOf(adminId), generator.commandsMessage()));
+        }
+        return messages;
     }
 
     @Override
@@ -361,11 +380,12 @@ public class ServiceImpl implements Service {
     public List<SendMessage> switchStudent(String text) {
         String studentId = text.substring(7, text.indexOf(" "));
         String studentName = text.substring(text.indexOf(" ")).toUpperCase();
+        SendMessage previousStudentMessage = new SendMessage(String.valueOf(currentStudentId), generator.teacherLeftChat());
         currentStudentId = Long.parseLong(studentId);
         SendMessage adminMessage = new SendMessage(String.valueOf(adminId), "переключено на студента" + studentName +
                 "\nТеперь он получает прямые сообщения и можно сохранить для него слова и домашку");
-        SendMessage studentMessage = new SendMessage(String.valueOf(currentStudentId), generator.teacherEntersChat());
-        System.out.println(currentStudentId);
-        return List.of(adminMessage, studentMessage);
+        SendMessage newStudentMessage = new SendMessage(String.valueOf(currentStudentId), generator.teacherEntersChat());
+//        System.out.println(currentStudentId);
+        return List.of(adminMessage, previousStudentMessage, newStudentMessage);
     }
 }

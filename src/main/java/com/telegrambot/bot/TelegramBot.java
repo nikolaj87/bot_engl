@@ -8,10 +8,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendVoice;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.Voice;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -38,8 +35,8 @@ public class TelegramBot extends TelegramLongPollingBot {
         commandList.add(new BotCommand("/last_words", "NEW WORDS"));
         commandList.add(new BotCommand("/archive", "ARCHIVE"));
         commandList.add(new BotCommand("/stop", "stop studying words"));
-        commandList.add(new BotCommand("/start", "update alexandra_english_bot"));
-        commandList.add(new BotCommand("/commands", "admin remind commands"));
+        commandList.add(new BotCommand("/start", "INFO"));
+//        commandList.add(new BotCommand("/commands", "admin remind commands"));
         try {
             this.execute(new SetMyCommands(commandList, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -80,19 +77,21 @@ public class TelegramBot extends TelegramLongPollingBot {
 //            System.out.println(messageText);
 
             if (update.getMessage().getChatId() == adminId) {
-                if (messageText.matches(REG_EX_ADD_WORD)) {
-                    return service.addWord(messageText);
-                }
                 if (messageText.toLowerCase().startsWith("hwhw")) {
                     return service.addHomeTask(chatId, messageText);
                 }
                 if (messageText.equals("/switch_student")) {
                     return service.getAllStudents(update);
                 }
-                if (messageText.equals("/commands")) {
-                    return service.getCommands();
+                if (messageText.toLowerCase().startsWith("swsw")) {
+                    return service.getLastWords();
                 }
-//                return List.of(new SendMessage(String.valueOf(ServiceImpl.getStudentId()), messageText));
+                if (messageText.toLowerCase().matches("dlt\\s?\\d*")) {
+                    return service.deleteById(messageText);
+                }
+            }
+            if (messageText.matches(REG_EX_ADD_WORD)) {
+                return service.addWord(messageText, chatId);
             }
             if (messageText.equals("/last_words")) {
                 return service.studyNewButton(chatId, messageText);
@@ -109,6 +108,11 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (messageText.equals("/start")) {
                 return service.initializeNewStudent(update, chatId);
             }
+            //если учитель пишет студенту просто разрешить это сообщение
+            if (chatId == adminId && chatId != ServiceImpl.getStudentId()) {
+                return List.of(new SendMessage(String.valueOf(ServiceImpl.getStudentId()), messageText));
+            }
+            //иначе это ответ на сообщение и надо его проверить
             return service.handleStudentMessage(chatId, messageText);
         }
         if (update.hasCallbackQuery()) {

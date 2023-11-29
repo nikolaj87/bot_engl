@@ -39,8 +39,8 @@ public class KeyboardGenerator {
 
     {
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
-        InlineKeyboardButton yes = new InlineKeyboardButton("YES");
-        InlineKeyboardButton no = new InlineKeyboardButton("NO");
+        InlineKeyboardButton yes = new InlineKeyboardButton("I've done it!");
+        InlineKeyboardButton no = new InlineKeyboardButton("Remind later");
         yes.setCallbackData("hwYes");
         no.setCallbackData("hwNo");
         keyboardMarkup.setKeyboard(List.of(List.of(yes, no)));
