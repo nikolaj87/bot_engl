@@ -46,10 +46,8 @@ public class MessageGenerator {
     };
     //бот напоминает что нужно сделать домашнее задание
     private final String[] homeworkRemind = {
-            "Remember about your homework: ",
-            "Just a reminder about your homework: ",
-            "Please, keep in mind to do your hometask: ",
-            "Don't forget to do your hometask: "
+            "Have you done your homework? ",
+            "Is the homework done?: "
     };
     //это студент не получает это не важно
     private final String commandsMessage =
