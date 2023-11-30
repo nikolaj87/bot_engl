@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface Service {
     @Transactional
-    List<SendMessage> addWord(String text);
+    List<SendMessage> addWord(String text, long currentId);
     @Transactional
     List<SendMessage> initializeNewStudent(Update update, long currentId);
     @Transactional
@@ -30,7 +30,17 @@ public interface Service {
     @Transactional
     List<SendMessage> getAllStudents(Update update);
     @Transactional
-    List<SendMessage> getCommands();
+    List<SendMessage> getLastWords();
     @Transactional
     List<SendMessage> clearCache(long chatId);
+    @Transactional
+    List<SendMessage> studyArchiveButton(long chatId, String messageText);
+    @Transactional
+    List<SendMessage> wordToArchive(long studentId, String word);
+    @Transactional
+    List<SendMessage> wordToList(long studentId, String word);
+    @Transactional
+    List<SendMessage> wordListen(long studentId);
+    @Transactional
+    List<SendMessage> deleteById(String request);
 }

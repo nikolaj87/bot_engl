@@ -13,7 +13,7 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
+### IntelliJ IDEA ## #
 .idea
 .mvn
 .target
@@ -21,6 +21,7 @@ target/
 *.iml
 *.ipr
 src/main/resources/application.properties
+src/main/java/com/telegrambot/todo.txt
 
 ### NetBeans ###
 /nbproject/private/
