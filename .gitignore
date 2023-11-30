@@ -21,6 +21,7 @@ target/
 *.iml
 *.ipr
 src/main/resources/application.properties
+src/main/java/com/telegrambot/todo.txt
 
 ### NetBeans ###
 /nbproject/private/
