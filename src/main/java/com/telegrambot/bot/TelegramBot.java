@@ -34,6 +34,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         commandList.add(new BotCommand("/my_words", "ALL WORDS"));
         commandList.add(new BotCommand("/last_words", "NEW WORDS"));
         commandList.add(new BotCommand("/archive", "ARCHIVE"));
+        commandList.add(new BotCommand("/collocations", "study collocations"));
         commandList.add(new BotCommand("/stop", "stop studying words"));
         commandList.add(new BotCommand("/start", "INFO"));
 //        commandList.add(new BotCommand("/commands", "admin remind commands"));
@@ -101,6 +102,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             }
             if (messageText.equals("/archive")) {
                 return service.studyArchiveButton(chatId, messageText);
+            }
+            if (messageText.equals("/collocations")) {
+                return service.studyCollocationsButton(chatId);
             }
             if (messageText.equals("/stop")) {
                 return service.clearCache(chatId);

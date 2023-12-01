@@ -43,4 +43,6 @@ public interface Service {
     List<SendMessage> wordListen(long studentId);
     @Transactional
     List<SendMessage> deleteById(String request);
+    @Transactional
+    List<SendMessage> studyCollocationsButton(long chatId);
 }

@@ -179,6 +179,13 @@ public class ServiceImpl implements Service {
                 messagesForStudent.add(messages.get(1));
                 return messagesForStudent;
             }
+            if (englishWordCache.startsWith("5")) {
+                SendMessage sendMessage = new SendMessage(String.valueOf(studentId), "end of list");
+                messagesForStudent.add(sendMessage);
+                return messagesForStudent;
+            }
+
+
         }
         //иначе кеш не пуст и я могу взять слово из кеш
         Word anyWord = cacheList.getAndDelete(studentId);
@@ -199,6 +206,13 @@ public class ServiceImpl implements Service {
             cache.put(studentId, "3" + anyWord.getWordEnglish());
             SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
             sendMessage.setReplyMarkup(keyGenerator.getArchiveWordButtons(anyWord.getWordEnglish()));
+            messagesForStudent.add(sendMessage);
+            return messagesForStudent;
+        }
+        if (englishWordCache.startsWith("5")) {
+            cache.put(studentId, "5" + anyWord.getWordEnglish());
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
+//            sendMessage.setReplyMarkup(keyGenerator.getArchiveWordButtons(anyWord.getWordEnglish()));
             messagesForStudent.add(sendMessage);
             return messagesForStudent;
         }
@@ -265,6 +279,26 @@ public class ServiceImpl implements Service {
 //    public List<SendMessage> wordListen(long studentId) {
 //        return List.of(new SendMessage(String.valueOf(studentId), "not yet :-/"));
 //    }
+
+    @Override
+    public List<SendMessage> studyCollocationsButton(long chatId) {
+        if (chatId == currentStudentId && adminId != currentStudentId) {
+            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
+        }
+        //тут достаю слова из категории collocations
+        List<Word> collocations = wordRepository.getCollocationsWords(); //!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if (!collocations.isEmpty()) {
+            Word anyWord = cacheList.putAndReturnAny(chatId, collocations);
+            //c помошью кеша я буду отличать какие слова там лежат
+            //если это слово имеет приставку 4 то это слова collocations
+            cache.put(chatId, "5" + anyWord.getWordEnglish());
+            SendMessage number = new SendMessage(String.valueOf(chatId), collocations.size() + " words found");
+            SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
+//            sendMessage.setReplyMarkup(keyGenerator.getArchiveWordButtons(anyWord.getWordEnglish()));
+            return List.of(number, sendMessage);
+        }
+        return List.of(new SendMessage(String.valueOf(chatId), "no words found"));
+    }
 
     @Override
     public List<SendMessage> wordToArchive(long studentId, String word) {
