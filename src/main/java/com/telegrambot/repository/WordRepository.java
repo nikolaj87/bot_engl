@@ -36,6 +36,9 @@ public interface WordRepository extends JpaRepository<Word, Long> {
     @Query(value = "SELECT * FROM word WHERE group_name = 'collocations1'", nativeQuery = true)
     List<Word> getCollocationsWords();
 
+    @Query(value = "SELECT * FROM word WHERE group_name = 'do' OR group_name = 'make'", nativeQuery = true)
+    List<Word> getDoMakeWords();
+
     @Modifying
     @Query(value = "UPDATE word SET is_archive = '1' WHERE student_id = :studentId AND word_english = :word", nativeQuery = true)
     void wordToArchive (long studentId, String word);

@@ -118,6 +118,16 @@ public class KeyboardGenerator {
         return keyboardMarkup;
     }
 
+    public ReplyKeyboard getDoMakeButtons() {
+        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+        InlineKeyboardButton doButton = new InlineKeyboardButton("do");
+        InlineKeyboardButton makeButton = new InlineKeyboardButton("make");
+        doButton.setCallbackData("doMakeDo");
+        makeButton.setCallbackData("doMakeMake");
+        keyboardMarkup.setKeyboard(List.of(List.of(doButton, makeButton)));
+        return keyboardMarkup;
+    }
+
     public ReplyKeyboard getArchiveWordButtons(String englishWord) {
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
         InlineKeyboardButton listen = new InlineKeyboardButton("listen  " + speaker);
