@@ -24,7 +24,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final ServiceImpl service;
 
     @Value("${admin_id}")
-    private static long adminId;
+    private long adminId;
     private static final String REG_EX_ADD_WORD = "\\+.{2,}\\+.{2,}";       //  +...+...
 
     public TelegramBot(BotConfig botConfig, ServiceImpl service) {
@@ -76,7 +76,6 @@ public class TelegramBot extends TelegramLongPollingBot {
         if (update.hasMessage() && update.getMessage().hasText()) {
             long chatId = update.getMessage().getChatId();
             String messageText = update.getMessage().getText();
-//            System.out.println(messageText);
 
             if (update.getMessage().getChatId() == adminId) {
                 if (messageText.toLowerCase().startsWith("hwhw")) {
@@ -117,8 +116,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                 return service.initializeNewStudent(update, chatId);
             }
             //если учитель пишет студенту просто разрешить это сообщение
-            if (chatId == adminId && chatId != ServiceImpl.getStudentId()) {
-                return List.of(new SendMessage(String.valueOf(ServiceImpl.getStudentId()), messageText));
+            if (chatId == adminId && chatId != service.getStudentId()) {
+                return List.of(new SendMessage(String.valueOf(service.getStudentId()), messageText));
             }
             //иначе это ответ на сообщение и надо его проверить
             return service.handleStudentMessage(chatId, messageText);

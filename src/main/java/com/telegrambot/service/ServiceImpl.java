@@ -41,10 +41,10 @@ public class ServiceImpl implements Service {
     private String app_version;
 
     @Value("${admin_id}")
-    private static long currentStudentId;
+    private long currentStudentId;
 
     @Value("${admin_id}")
-    private static long adminId;
+    private long adminId;
 
     public ServiceImpl(Cache cache, CacheList cacheList, MessageGenerator generator, KeyboardGenerator keyGenerator, StudentRepository studentRepository, WordRepository wordRepository, HomeTaskRepository homeTaskRepository) {
         this.cache = cache;
@@ -56,7 +56,7 @@ public class ServiceImpl implements Service {
         this.homeTaskRepository = homeTaskRepository;
     }
 
-    public static long getStudentId() {
+    public long getStudentId() {
         return currentStudentId;
     }
 
