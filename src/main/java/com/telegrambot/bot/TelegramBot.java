@@ -3,6 +3,7 @@ package com.telegrambot.bot;
 import com.telegrambot.config.BotConfig;
 import com.telegrambot.utils.MessageGenerator;
 import com.telegrambot.service.ServiceImpl;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -21,22 +22,23 @@ import java.util.List;
 public class TelegramBot extends TelegramLongPollingBot {
     private final BotConfig botConfig;
     private final ServiceImpl service;
-    private final MessageGenerator generator;
-    private static final long adminId = 795942078L;
+
+    @Value("${admin_id}")
+    private static long adminId;
     private static final String REG_EX_ADD_WORD = "\\+.{2,}\\+.{2,}";       //  +...+...
 
-    public TelegramBot(BotConfig botConfig, ServiceImpl service, MessageGenerator generator) {
+    public TelegramBot(BotConfig botConfig, ServiceImpl service) {
         this.botConfig = botConfig;
         this.service = service;
-        this.generator = generator;
         List<BotCommand> commandList = new ArrayList<>();
         commandList.add(new BotCommand("/switch_student", "admin switch student"));
         commandList.add(new BotCommand("/my_words", "ALL WORDS"));
         commandList.add(new BotCommand("/last_words", "NEW WORDS"));
         commandList.add(new BotCommand("/archive", "ARCHIVE"));
+        commandList.add(new BotCommand("/do_make", "study do_make"));
+        commandList.add(new BotCommand("/collocations", "study collocations"));
         commandList.add(new BotCommand("/stop", "stop studying words"));
         commandList.add(new BotCommand("/start", "INFO"));
-//        commandList.add(new BotCommand("/commands", "admin remind commands"));
         try {
             this.execute(new SetMyCommands(commandList, new BotCommandScopeDefault(), null));
         } catch (TelegramApiException e) {
@@ -102,6 +104,12 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (messageText.equals("/archive")) {
                 return service.studyArchiveButton(chatId, messageText);
             }
+            if (messageText.equals("/collocations")) {
+                return service.studyCollocationsButton(chatId);
+            }
+            if (messageText.equals("/do_make")) {
+                return service.studyDoMakeButton(chatId);
+            }
             if (messageText.equals("/stop")) {
                 return service.clearCache(chatId);
             }
@@ -134,9 +142,12 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (data.equals("listen")) {
                 return service.wordListen(studentId);
             }
+            if (data.startsWith("doMake")) {
+                return service.handleStudentMessage(studentId, data.substring(6));
+            }
         }
-//        return List.of(new SendMessage("795942078", generator.waitMessage()));
-        return null;
+        long chatId = update.getMessage().getChatId();
+        return List.of(new SendMessage(String.valueOf(chatId), ";-)"));
     }
 
     private void sendMessages(List<SendMessage> messages) {

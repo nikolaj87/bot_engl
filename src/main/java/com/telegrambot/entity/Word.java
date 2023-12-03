@@ -21,6 +21,8 @@ public class Word {
     private Timestamp createdAt;
     @Column(name = "is_archive")
     private int isArchive;
+    @Column(name = "group_name")
+    private String groupName;
 
     public Word(long id, String wordEnglish, String wordOriginal, long studentId, Timestamp createdAt, int isArchive) {
         this.id = id;
@@ -80,6 +82,14 @@ public class Word {
 
     public void setIsArchive(int category) {
         this.isArchive = category;
+    }
+
+    public String getGroupName() {
+        return groupName;
+    }
+
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
     }
 
     @Override

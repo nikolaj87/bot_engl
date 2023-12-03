@@ -13,6 +13,7 @@ import com.telegrambot.repository.WordRepository;
 
 
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
+import org.springframework.beans.factory.annotation.Value;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -35,9 +36,15 @@ public class ServiceImpl implements Service {
     private final StudentRepository studentRepository;
     private final WordRepository wordRepository;
     private final HomeTaskRepository homeTaskRepository;
-    private static long currentStudentId = 795942078L;
-    private static final long adminId = 795942078L;
-    private static final String UKRAINIAN_FLAG = "\uD83C\uDDFA\uD83C\uDDE6";
+
+    @Value("${app_version}")
+    private String app_version;
+
+    @Value("${admin_id}")
+    private static long currentStudentId;
+
+    @Value("${admin_id}")
+    private static long adminId;
 
     public ServiceImpl(Cache cache, CacheList cacheList, MessageGenerator generator, KeyboardGenerator keyGenerator, StudentRepository studentRepository, WordRepository wordRepository, HomeTaskRepository homeTaskRepository) {
         this.cache = cache;
@@ -75,10 +82,6 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> handleHomeworkReply(long studentId, String reply) {
-//        if (!cache.cacheCheck(studentId)) {
-//            return List.of(new SendMessage(String.valueOf(studentId), generator.waitMessage()));
-//        }
-//        cache.remove(studentId);
         if (reply.equals("hwYes")) {
             homeTaskRepository.updateHomeTaskByIdSetIsActiveFalse(studentId);
             return List.of(new SendMessage(String.valueOf(studentId), generator.correctMessage()));
@@ -98,7 +101,6 @@ public class ServiceImpl implements Service {
             if (homeworkOptional.isPresent()) {
                 if (homeworkOptional.get().isActive() == 1) {
                     String description = homeworkOptional.get().getDescription();
-//                    cache.put(student.getId(), "home");
                     var message = new SendMessage(String.valueOf(student.getId()), generator.getHomeworkRemind() + description);
                     message.setReplyMarkup(keyGenerator.getYesNoBoard());
                     messages.add(message);
@@ -179,6 +181,17 @@ public class ServiceImpl implements Service {
                 messagesForStudent.add(messages.get(1));
                 return messagesForStudent;
             }
+            if (englishWordCache.startsWith("5")) {
+                SendMessage sendMessage = new SendMessage(String.valueOf(studentId), "end of list");
+                messagesForStudent.add(sendMessage);
+                return messagesForStudent;
+            }
+            if (englishWordCache.startsWith("6")) {
+                SendMessage sendMessage = new SendMessage(String.valueOf(studentId), "end of list");
+                messagesForStudent.add(sendMessage);
+                return messagesForStudent;
+            }
+
         }
         //иначе кеш не пуст и я могу взять слово из кеш
         Word anyWord = cacheList.getAndDelete(studentId);
@@ -199,6 +212,19 @@ public class ServiceImpl implements Service {
             cache.put(studentId, "3" + anyWord.getWordEnglish());
             SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
             sendMessage.setReplyMarkup(keyGenerator.getArchiveWordButtons(anyWord.getWordEnglish()));
+            messagesForStudent.add(sendMessage);
+            return messagesForStudent;
+        }
+        if (englishWordCache.startsWith("5")) {
+            cache.put(studentId, "5" + anyWord.getWordEnglish());
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
+            messagesForStudent.add(sendMessage);
+            return messagesForStudent;
+        }
+        if (englishWordCache.startsWith("6")) {
+            cache.put(studentId, "6" + anyWord.getGroupName());
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), anyWord.getWordEnglish().substring(anyWord.getWordEnglish().indexOf(" ")));
+            sendMessage.setReplyMarkup(keyGenerator.getDoMakeButtons());
             messagesForStudent.add(sendMessage);
             return messagesForStudent;
         }
@@ -261,10 +287,46 @@ public class ServiceImpl implements Service {
         return List.of(new SendMessage(String.valueOf(chatId), "you haven`t words in archive :("));
     }
 
-//    @Override
-//    public List<SendMessage> wordListen(long studentId) {
-//        return List.of(new SendMessage(String.valueOf(studentId), "not yet :-/"));
-//    }
+    @Override
+    public List<SendMessage> studyCollocationsButton(long chatId) {
+        if (chatId == currentStudentId && adminId != currentStudentId) {
+            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
+        }
+        //тут достаю слова из категории collocations
+        List<Word> collocations = wordRepository.getCollocationsWords(); //!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if (!collocations.isEmpty()) {
+            Word anyWord = cacheList.putAndReturnAny(chatId, collocations);
+            //c помошью кеша я буду отличать какие слова там лежат
+            //если это слово имеет приставку 4 то это слова collocations
+            cache.put(chatId, "5" + anyWord.getWordEnglish());
+            SendMessage number = new SendMessage(String.valueOf(chatId), collocations.size() + " words found");
+            SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
+            return List.of(number, sendMessage);
+        }
+        return List.of(new SendMessage(String.valueOf(chatId), "no words found"));
+    }
+
+    @Override
+    public List<SendMessage> studyDoMakeButton(long chatId) {
+        if (chatId == currentStudentId && adminId != currentStudentId) {
+            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
+        }
+        //тут достаю слова из категории do make
+        List<Word> doMake = wordRepository.getDoMakeWords(); //!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if (!doMake.isEmpty()) {
+            Word anyWord = cacheList.putAndReturnAny(chatId, doMake);
+            //c помошью кеша я буду отличать какие слова там лежат
+            //если это слово имеет приставку 6 то это слова doMake
+            cache.put(chatId, "6" + anyWord.getGroupName());
+            SendMessage number = new SendMessage(String.valueOf(chatId), doMake.size() + " words found");
+            SendMessage task = new SendMessage(String.valueOf(chatId), "choose DO or MAKE");
+            SendMessage sendMessage = new SendMessage(String.valueOf(chatId), anyWord.getWordEnglish().substring(anyWord.getWordEnglish().indexOf(" ")));
+            sendMessage.setReplyMarkup(keyGenerator.getDoMakeButtons());
+            return List.of(number, task, sendMessage);
+        }
+        return List.of(new SendMessage(String.valueOf(chatId), "no words found"));
+
+    }
 
     @Override
     public List<SendMessage> wordToArchive(long studentId, String word) {
@@ -327,9 +389,6 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> addWord(String text, long currentId) {
-//        if (currentStudentId == adminId) {
-//            return List.of(new SendMessage(String.valueOf(adminId), "себе нельзя сохранять слова, выбери студента"));
-//        }
         String wordEnglish = text.substring(1, text.lastIndexOf("+")).trim().toLowerCase();
         String wordOrigin = text.substring(text.lastIndexOf("+") + 1).trim().toLowerCase();
         Word word = new Word(0L, wordEnglish, wordOrigin, currentId, new Timestamp(System.currentTimeMillis()), 0);
@@ -356,7 +415,7 @@ public class ServiceImpl implements Service {
                     student.getId() + " имя = " + student.getName());
             messages.add(adminMessage);
         }
-        SendMessage versionMessage = new SendMessage(String.valueOf(currentId), "welcome to alexandra_english_bot!:) \nV.1.1.3");
+        SendMessage versionMessage = new SendMessage(String.valueOf(currentId), "welcome to alexandra_english_bot!:) \n" + app_version);
         SendMessage rusMessage = new SendMessage(String.valueOf(currentId), generator.rusMessage());
         SendMessage ukrMessage = new SendMessage(String.valueOf(currentId), generator.ukrMessage());
         SendMessage polMessage = new SendMessage(String.valueOf(currentId), generator.polMessage());
