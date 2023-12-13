@@ -41,6 +41,8 @@ public class ServiceImpl implements Service {
 
     @Value("${admin_id}")
     private long adminId;
+    @Value("${words_on_page}")
+    private int wordsOnPage;
 
     public ServiceImpl(Cache cache, CacheList cacheList, MessageGenerator generator, KeyboardGenerator keyboards, StudentRepository studentRepository, WordRepository wordRepository, HomeTaskRepository homeTaskRepository) {
         this.cache = cache;
@@ -285,21 +287,33 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyCollocationsButton(long chatId) {
+        int collocationWordsNumber = wordRepository.getCollocationsWordNumber();
+        if (collocationWordsNumber == 0) {
+            return List.of(new SendMessage(String.valueOf(chatId), "no words found"));
+        }
+        int pagesNumber = collocationWordsNumber / wordsOnPage + 1;
+        SendMessage sendMessage = new SendMessage(String.valueOf(chatId), "choose collocations page");
+        sendMessage.setReplyMarkup(keyboards.addPageNumberButtons(pagesNumber));
+        return List.of(sendMessage);
+    }
+
+    @Override
+    public List<SendMessage> studyCollocationsButtonPage(long chatId, String data) {
         if (chatId == currentStudentId && adminId != currentStudentId) {
             return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
         }
-        //тут достаю слова из категории collocations
-        List<Word> collocations = wordRepository.getCollocationsWords(); //!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        if (!collocations.isEmpty()) {
-            Word anyWord = cacheList.putAndReturnAny(chatId, collocations);
-            //c помошью кеша я буду отличать какие слова там лежат
-            //если это слово имеет приставку 4 то это слова collocations
-            cache.put(chatId, "5" + anyWord.getWordEnglish());
-            SendMessage number = new SendMessage(String.valueOf(chatId), collocations.size() + " words found");
-            SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
-            return List.of(number, sendMessage);
-        }
-        return List.of(new SendMessage(String.valueOf(chatId), "no words found"));
+        int page = Integer.parseInt(data.substring(12));
+        int wordsToSkip = (page - 1) * wordsOnPage;
+        //тут достаю слова из категории collocations. Если 1 страница - пропускаю 0 и беру словНаСтранице
+        //если 3я - пропускаю 2 x слов_на_странице и беру количество слов_на_странице
+        List<Word> collocations = wordRepository.getCollocationsWordsPage(wordsToSkip, wordsOnPage);
+        SendMessage number = new SendMessage(String.valueOf(chatId), collocations.size() + " words found");
+        Word anyWord = cacheList.putAndReturnAny(chatId, collocations);
+        //c помошью кеша я буду отличать какие слова там лежат
+        //если это слово имеет приставку 5 то это слова collocations
+        cache.put(chatId, "5" + anyWord.getWordEnglish());
+        SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
+        return List.of(number, sendMessage);
     }
 
     @Override

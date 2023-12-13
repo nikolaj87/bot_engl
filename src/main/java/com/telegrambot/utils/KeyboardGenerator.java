@@ -137,4 +137,27 @@ public class KeyboardGenerator {
         keyboardMarkup.setKeyboard(List.of(List.of(listen, toList)));
         return keyboardMarkup;
     }
+
+    public ReplyKeyboard addPageNumberButtons(int pagesNumber) {
+        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+        List<List<InlineKeyboardButton>> allKeys = new LinkedList<>();
+        List<InlineKeyboardButton> buttonRow = new LinkedList<>();
+        InlineKeyboardButton button;
+
+        for (int i = 1; i <= pagesNumber; i++) {
+            button = new InlineKeyboardButton("page " + i);
+            button.setCallbackData("collocations" + i);
+            buttonRow.add(button);
+
+            if (i % 4 == 0) {
+                allKeys.add(buttonRow);
+                buttonRow = new LinkedList<>();
+            }
+        }
+        if (!buttonRow.isEmpty()) {
+            allKeys.add(buttonRow);
+        }
+        keyboardMarkup.setKeyboard(allKeys);
+        return keyboardMarkup;
+    }
 }

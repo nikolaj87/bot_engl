@@ -33,9 +33,6 @@ public interface WordRepository extends JpaRepository<Word, Long> {
     @Query(value = "SELECT * FROM word WHERE student_id = :studentId AND is_archive = 1", nativeQuery = true)
     List<Word> getArchiveStudentWords(long studentId);
 
-    @Query(value = "SELECT * FROM word WHERE group_name = 'collocations1'", nativeQuery = true)
-    List<Word> getCollocationsWords();
-
     @Query(value = "SELECT * FROM word WHERE group_name = 'do' OR group_name = 'make'", nativeQuery = true)
     List<Word> getDoMakeWords();
 
@@ -49,6 +46,12 @@ public interface WordRepository extends JpaRepository<Word, Long> {
 
     @Query(value = "SELECT * FROM (SELECT * FROM word WHERE student_id = :studentId ORDER BY created_at DESC LIMIT 30) AS last30 ORDER BY created_at ASC", nativeQuery = true)
     List<Word> getLast30Words(long studentId);
+
+    @Query(value = "SELECT count(*) FROM word WHERE group_name = 'collocations1'", nativeQuery = true)
+    int getCollocationsWordNumber();
+
+    @Query(value = "SELECT * FROM word WHERE group_name = 'collocations1' LIMIT :wordsToSkip, :wordsOnPage", nativeQuery = true)
+    List<Word> getCollocationsWordsPage(int wordsToSkip, int wordsOnPage);
 
 
     //    List<Word> getAllByStudentIdAndAndCreatedAt (long studentId, Timestamp timestamp);

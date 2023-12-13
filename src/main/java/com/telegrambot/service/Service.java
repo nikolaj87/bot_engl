@@ -46,5 +46,7 @@ public interface Service {
     @Transactional
     List<SendMessage> studyCollocationsButton(long chatId);
     @Transactional
+    List<SendMessage> studyCollocationsButtonPage(long chatId, String data);
+    @Transactional
     List<SendMessage> studyDoMakeButton(long chatId);
 }

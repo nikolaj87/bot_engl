@@ -144,6 +144,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (data.startsWith("doMake")) {
                 return service.handleStudentMessage(studentId, data.substring(6));
             }
+            if (data.startsWith("collocations")) {
+                return service.studyCollocationsButtonPage(studentId, data);
+            }
         }
         long chatId = update.getMessage().getChatId();
         return List.of(new SendMessage(String.valueOf(chatId), ";-)"));
