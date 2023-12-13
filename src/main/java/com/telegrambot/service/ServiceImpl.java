@@ -12,10 +12,8 @@ import com.telegrambot.repository.StudentRepository;
 import com.telegrambot.repository.WordRepository;
 
 
-import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.springframework.beans.factory.annotation.Value;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.sql.Timestamp;
@@ -23,8 +21,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @org.springframework.stereotype.Service
 public class ServiceImpl implements Service {
@@ -32,7 +28,7 @@ public class ServiceImpl implements Service {
     private final Cache cache;
     private final CacheList cacheList;
     private final MessageGenerator generator;
-    private final KeyboardGenerator keyGenerator;
+    private final KeyboardGenerator keyboards;
     private final StudentRepository studentRepository;
     private final WordRepository wordRepository;
     private final HomeTaskRepository homeTaskRepository;
@@ -46,11 +42,11 @@ public class ServiceImpl implements Service {
     @Value("${admin_id}")
     private long adminId;
 
-    public ServiceImpl(Cache cache, CacheList cacheList, MessageGenerator generator, KeyboardGenerator keyGenerator, StudentRepository studentRepository, WordRepository wordRepository, HomeTaskRepository homeTaskRepository) {
+    public ServiceImpl(Cache cache, CacheList cacheList, MessageGenerator generator, KeyboardGenerator keyboards, StudentRepository studentRepository, WordRepository wordRepository, HomeTaskRepository homeTaskRepository) {
         this.cache = cache;
         this.cacheList = cacheList;
         this.generator = generator;
-        this.keyGenerator = keyGenerator;
+        this.keyboards = keyboards;
         this.studentRepository = studentRepository;
         this.wordRepository = wordRepository;
         this.homeTaskRepository = homeTaskRepository;
@@ -102,7 +98,7 @@ public class ServiceImpl implements Service {
                 if (homeworkOptional.get().isActive() == 1) {
                     String description = homeworkOptional.get().getDescription();
                     var message = new SendMessage(String.valueOf(student.getId()), generator.getHomeworkRemind() + description);
-                    message.setReplyMarkup(keyGenerator.getYesNoBoard());
+                    message.setReplyMarkup(keyboards.getYesNoBoard());
                     messages.add(message);
                 }
             }
@@ -204,14 +200,14 @@ public class ServiceImpl implements Service {
         if (englishWordCache.startsWith("2")) {
             cache.put(studentId, "2" + anyWord.getWordEnglish());
             SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
-            sendMessage.setReplyMarkup(keyGenerator.getAllWordButtons(anyWord.getWordEnglish()));
+            sendMessage.setReplyMarkup(keyboards.getAllWordButtons(anyWord.getWordEnglish()));
             messagesForStudent.add(sendMessage);
             return messagesForStudent;
         }
         if (englishWordCache.startsWith("3")) {
             cache.put(studentId, "3" + anyWord.getWordEnglish());
             SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
-            sendMessage.setReplyMarkup(keyGenerator.getArchiveWordButtons(anyWord.getWordEnglish()));
+            sendMessage.setReplyMarkup(keyboards.getArchiveWordButtons(anyWord.getWordEnglish()));
             messagesForStudent.add(sendMessage);
             return messagesForStudent;
         }
@@ -224,7 +220,7 @@ public class ServiceImpl implements Service {
         if (englishWordCache.startsWith("6")) {
             cache.put(studentId, "6" + anyWord.getGroupName());
             SendMessage sendMessage = new SendMessage(String.valueOf(studentId), anyWord.getWordEnglish().substring(anyWord.getWordEnglish().indexOf(" ")));
-            sendMessage.setReplyMarkup(keyGenerator.getDoMakeButtons());
+            sendMessage.setReplyMarkup(keyboards.getDoMakeButtons());
             messagesForStudent.add(sendMessage);
             return messagesForStudent;
         }
@@ -262,7 +258,7 @@ public class ServiceImpl implements Service {
             cache.put(chatId, "2" + anyWord.getWordEnglish());
             SendMessage number = new SendMessage(String.valueOf(chatId), allWords.size() + " words found");
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
-            sendMessage.setReplyMarkup(keyGenerator.getAllWordButtons(anyWord.getWordEnglish()));
+            sendMessage.setReplyMarkup(keyboards.getAllWordButtons(anyWord.getWordEnglish()));
             return List.of(number, sendMessage);
         }
         return List.of(new SendMessage(String.valueOf(chatId), "you have 0 words :("));
@@ -281,7 +277,7 @@ public class ServiceImpl implements Service {
             cache.put(chatId, "3" + anyWord.getWordEnglish());
             SendMessage number = new SendMessage(String.valueOf(chatId), archiveWords.size() + " words found");
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
-            sendMessage.setReplyMarkup(keyGenerator.getArchiveWordButtons(anyWord.getWordEnglish()));
+            sendMessage.setReplyMarkup(keyboards.getArchiveWordButtons(anyWord.getWordEnglish()));
             return List.of(number, sendMessage);
         }
         return List.of(new SendMessage(String.valueOf(chatId), "you haven`t words in archive :("));
@@ -321,7 +317,7 @@ public class ServiceImpl implements Service {
             SendMessage number = new SendMessage(String.valueOf(chatId), doMake.size() + " words found");
             SendMessage task = new SendMessage(String.valueOf(chatId), "choose DO or MAKE");
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), anyWord.getWordEnglish().substring(anyWord.getWordEnglish().indexOf(" ")));
-            sendMessage.setReplyMarkup(keyGenerator.getDoMakeButtons());
+            sendMessage.setReplyMarkup(keyboards.getDoMakeButtons());
             return List.of(number, task, sendMessage);
         }
         return List.of(new SendMessage(String.valueOf(chatId), "no words found"));
@@ -389,8 +385,8 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> addWord(String text, long currentId) {
-        String wordEnglish = text.substring(1, text.lastIndexOf("+")).trim().toLowerCase();
-        String wordOrigin = text.substring(text.lastIndexOf("+") + 1).trim().toLowerCase();
+        String wordEnglish = text.substring(1, text.lastIndexOf("+")).replaceAll("[.!]", "").trim().toLowerCase();
+        String wordOrigin = text.substring(text.lastIndexOf("+") + 1).replaceAll("[.!]", "").trim().toLowerCase();
         Word word = new Word(0L, wordEnglish, wordOrigin, currentId, new Timestamp(System.currentTimeMillis()), 0);
         List<SendMessage> messages = new ArrayList<>();
         if (currentId == adminId) {
@@ -432,7 +428,7 @@ public class ServiceImpl implements Service {
     @Override
     public List<SendMessage> getAllStudents(Update update) {
         List<Student> allStudents = studentRepository.findAll();
-        return keyGenerator.generateStudentList(allStudents, adminId);
+        return keyboards.generateStudentList(allStudents, adminId);
     }
 
     @Override
