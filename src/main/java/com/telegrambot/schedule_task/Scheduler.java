@@ -22,4 +22,9 @@ public class Scheduler {
     public void homeWorkRemind () {
         telegramBot.homeWorkRemind();
     }
+
+    @Scheduled(cron = "0 0 2 * * *")
+    public void switchToAdminChat () {
+        telegramBot.switchToAdminChat();
+    }
 }

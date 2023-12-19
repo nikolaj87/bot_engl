@@ -1,7 +1,6 @@
 package com.telegrambot.bot;
 
 import com.telegrambot.config.BotConfig;
-import com.telegrambot.utils.MessageGenerator;
 import com.telegrambot.service.ServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -72,6 +71,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         sendMessages(messages);
     }
 
+    public void switchToAdminChat() {
+        service.switchToAdminChat();
+    }
+
     private List<SendMessage> handleUpdate(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
             long chatId = update.getMessage().getChatId();
@@ -85,7 +88,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                     return service.getAllStudents(update);
                 }
                 if (messageText.toLowerCase().startsWith("swsw")) {
-                    return service.getLastWords();
+                    return service.getLastWordsAndHomeTask();
                 }
                 if (messageText.toLowerCase().matches("dlt\\s?\\d*")) {
                     return service.deleteById(messageText);

@@ -30,7 +30,7 @@ public interface Service {
     @Transactional
     List<SendMessage> getAllStudents(Update update);
     @Transactional
-    List<SendMessage> getLastWords();
+    List<SendMessage> getLastWordsAndHomeTask();
     @Transactional
     List<SendMessage> clearCache(long chatId);
     @Transactional
@@ -49,4 +49,6 @@ public interface Service {
     List<SendMessage> studyCollocationsButtonPage(long chatId, String data);
     @Transactional
     List<SendMessage> studyDoMakeButton(long chatId);
+    @Transactional
+    void switchToAdminChat();
 }

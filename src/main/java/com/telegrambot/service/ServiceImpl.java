@@ -119,7 +119,7 @@ public class ServiceImpl implements Service {
         allStudents.stream()
                 .filter(student -> student.getId() != currentStudentId && student.getId() != adminId)
                 .forEach(student -> {
-                    Optional<Word> anyWordOptional = wordRepository.getAnyWordByStudentId(student.getId());
+                    Optional<Word> anyWordOptional = wordRepository.getAnyNewWordByStudentId(student.getId(), wordsOnPage);
                     if (anyWordOptional.isPresent()) {
                         Word anyWord = anyWordOptional.get();
                         //c помошью кеша я буду отличать какие слова там лежат
@@ -236,11 +236,11 @@ public class ServiceImpl implements Service {
         }
         List<Word> allNewWords = wordRepository.getAllNewWords(chatId);
         if (!allNewWords.isEmpty()) {
+            SendMessage number = new SendMessage(String.valueOf(chatId), allNewWords.size() + " words found");
             Word anyWordFromList = cacheList.putAndReturnAny(chatId, allNewWords);
             //c помошью кеша я буду отличать какие слова там лежат
             //если это слово имеет приставку 1 то это новые слова
             cache.put(chatId, "1" + anyWordFromList.getWordEnglish());
-            SendMessage number = new SendMessage(String.valueOf(chatId), allNewWords.size() + " words found");
             SendMessage someWord = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWordFromList.getWordOriginal());
             return List.of(number, someWord);
         }
@@ -254,11 +254,11 @@ public class ServiceImpl implements Service {
         }
         List<Word> allWords = wordRepository.getAllStudentWords(chatId);
         if (!allWords.isEmpty()) {
+            SendMessage number = new SendMessage(String.valueOf(chatId), allWords.size() + " words found");
             Word anyWord = cacheList.putAndReturnAny(chatId, allWords);
             //c помошью кеша я буду отличать какие слова там лежат
             //если это слово имеет приставку 2 то это все слова
             cache.put(chatId, "2" + anyWord.getWordEnglish());
-            SendMessage number = new SendMessage(String.valueOf(chatId), allWords.size() + " words found");
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
             sendMessage.setReplyMarkup(keyboards.getAllWordButtons(anyWord.getWordEnglish()));
             return List.of(number, sendMessage);
@@ -273,11 +273,11 @@ public class ServiceImpl implements Service {
         }
         List<Word> archiveWords = wordRepository.getArchiveStudentWords(chatId);
         if (!archiveWords.isEmpty()) {
+            SendMessage number = new SendMessage(String.valueOf(chatId), archiveWords.size() + " words found");
             Word anyWord = cacheList.putAndReturnAny(chatId, archiveWords);
             //c помошью кеша я буду отличать какие слова там лежат
             //если это слово имеет приставку 3 то это слова из архива
             cache.put(chatId, "3" + anyWord.getWordEnglish());
-            SendMessage number = new SendMessage(String.valueOf(chatId), archiveWords.size() + " words found");
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
             sendMessage.setReplyMarkup(keyboards.getArchiveWordButtons(anyWord.getWordEnglish()));
             return List.of(number, sendMessage);
@@ -373,19 +373,30 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public List<SendMessage> getLastWords() {
-        List<Word> lastWords = wordRepository.getLast30Words(currentStudentId);
+    public List<SendMessage> getLastWordsAndHomeTask() {
+        List<Word> lastWords = wordRepository.getLastWords(currentStudentId, wordsOnPage);
         if (lastWords.isEmpty()) {
             return List.of(new SendMessage(String.valueOf(adminId), "found 0 words"));
         }
         StringBuilder reply = new StringBuilder();
+        reply
+                .append("list of last ")
+                .append(wordsOnPage)
+                .append(" words:")
+                .append("\n");
         for (Word word : lastWords) {
-            reply.append(word.getId());
-            reply.append(". ");
-            reply.append(word.getWordEnglish());
-            reply.append(" - ");
-            reply.append(word.getWordOriginal());
-            reply.append("\n");
+            reply
+                    .append(word.getId())
+                    .append(". ")
+                    .append(word.getWordEnglish())
+                    .append(" - ")
+                    .append(word.getWordOriginal())
+                    .append("\n");
+        }
+        Optional<Homework> homeworkOptional = homeTaskRepository.findHomeTaskById(currentStudentId);
+        if (homeworkOptional.isPresent()) {
+            reply.append("Last homework: ")
+                    .append(homeworkOptional.get().getDescription());
         }
         return List.of(new SendMessage(String.valueOf(adminId), reply.toString()));
     }
@@ -456,5 +467,12 @@ public class ServiceImpl implements Service {
         SendMessage newStudentMessage = new SendMessage(String.valueOf(currentStudentId), generator.teacherEntersChat());
 //        System.out.println(currentStudentId);
         return List.of(adminMessage, previousStudentMessage, newStudentMessage);
+    }
+
+    @Override
+    public void switchToAdminChat() {
+        if (currentStudentId != adminId) {
+            currentStudentId = adminId;
+        }
     }
 }

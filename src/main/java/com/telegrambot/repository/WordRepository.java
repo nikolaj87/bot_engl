@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,8 +14,13 @@ public interface WordRepository extends JpaRepository<Word, Long> {
     String getEnglishByOriginal (String originalWord);
     @Query(value = "SELECT word_original FROM word WHERE student_id = :studentId ORDER BY RAND() LIMIT 1", nativeQuery = true)
     String getAnyEnglishWordByStudentId_21day(Long studentId);
-    @Query(value = "SELECT * FROM word WHERE student_id = :studentId AND DATE_SUB(NOW(), INTERVAL 336 HOUR) < created_at ORDER BY RAND() LIMIT 1", nativeQuery = true)
-    Optional<Word> getAnyWordByStudentId(Long studentId);
+
+    //вернет любое слово из слов за 14 дней или из списка 30 последних слов
+    @Query(value = "SELECT * FROM word WHERE student_id = :studentId AND DATE_SUB(NOW(), INTERVAL 336 HOUR) < created_at \n" +
+            "UNION\n" +
+            "(SELECT * FROM (SELECT * FROM word WHERE student_id = :studentId AND is_archive = 0 ORDER BY created_at DESC LIMIT :wordsOnPage) AS last_words ORDER BY created_at ASC)\n" +
+            "ORDER BY RAND() LIMIT 1", nativeQuery = true)
+    Optional<Word> getAnyNewWordByStudentId(Long studentId, int wordsOnPage);
 
 
 //    @Query("SELECT w FROM Word w WHERE w.studentId = :studentId AND w.createdAt > DATE_ADD(NOW(), 336, 'HOUR')")
@@ -44,8 +48,8 @@ public interface WordRepository extends JpaRepository<Word, Long> {
     @Query(value = "UPDATE word SET is_archive = '0' WHERE student_id = :studentId AND word_english = :word", nativeQuery = true)
     void wordToList (long studentId, String word);
 
-    @Query(value = "SELECT * FROM (SELECT * FROM word WHERE student_id = :studentId ORDER BY created_at DESC LIMIT 30) AS last30 ORDER BY created_at ASC", nativeQuery = true)
-    List<Word> getLast30Words(long studentId);
+    @Query(value = "SELECT * FROM (SELECT * FROM word WHERE student_id = :studentId ORDER BY created_at DESC LIMIT :wordsOnPage) AS last_words ORDER BY created_at ASC", nativeQuery = true)
+    List<Word> getLastWords(long studentId, int wordsOnPage);
 
     @Query(value = "SELECT count(*) FROM word WHERE group_name = 'collocations1'", nativeQuery = true)
     int getCollocationsWordNumber();
