@@ -135,10 +135,10 @@ public class ServiceImpl implements Service {
     public List<SendMessage> handleStudentMessage(long studentId, String messageText) {
         //если учитель выбрал данного студента то идет урок и учитель получает сообщения студента
         //также учитель сам себе не отправляет свои сообщения
-        if (studentId == currentStudentId && adminId != currentStudentId) {
-            return List.of(new SendMessage(String.valueOf(adminId), messageText));
-        }
-        //если в кеше нет вопроса к студенту - пускай ждет урока. Даем wait message
+//        if (studentId == currentStudentId && adminId != currentStudentId) {
+//            return List.of(new SendMessage(String.valueOf(adminId), messageText));
+//        }
+        //если в кеше нет вопроса к студенту - wait message
         if (!cache.cacheCheck(studentId)) {
             return List.of(new SendMessage(String.valueOf(studentId), generator.waitMessage()));
         }
@@ -231,9 +231,9 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyNewButton(long chatId, String messageText) {
-        if (chatId == currentStudentId && adminId != currentStudentId) {
-            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
-        }
+//        if (chatId == currentStudentId && adminId != currentStudentId) {
+//            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
+//        }
         List<Word> allNewWords = wordRepository.getAllNewWords(chatId);
         if (!allNewWords.isEmpty()) {
             SendMessage number = new SendMessage(String.valueOf(chatId), allNewWords.size() + " words found");
@@ -249,9 +249,9 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyAllButton(long chatId, String messageText) {
-        if (chatId == currentStudentId && adminId != currentStudentId) {
-            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
-        }
+//        if (chatId == currentStudentId && adminId != currentStudentId) {
+//            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
+//        }
         List<Word> allWords = wordRepository.getAllStudentWords(chatId);
         if (!allWords.isEmpty()) {
             SendMessage number = new SendMessage(String.valueOf(chatId), allWords.size() + " words found");
@@ -268,9 +268,9 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyArchiveButton(long chatId, String messageText) {
-        if (chatId == currentStudentId && adminId != currentStudentId) {
-            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
-        }
+//        if (chatId == currentStudentId && adminId != currentStudentId) {
+//            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
+//        }
         List<Word> archiveWords = wordRepository.getArchiveStudentWords(chatId);
         if (!archiveWords.isEmpty()) {
             SendMessage number = new SendMessage(String.valueOf(chatId), archiveWords.size() + " words found");
@@ -299,9 +299,9 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyCollocationsButtonPage(long chatId, String data) {
-        if (chatId == currentStudentId && adminId != currentStudentId) {
-            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
-        }
+//        if (chatId == currentStudentId && adminId != currentStudentId) {
+//            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
+//        }
         int page = Integer.parseInt(data.substring(12));
         int wordsToSkip = (page - 1) * wordsOnPage;
         //тут достаю слова из категории collocations. Если 1 страница - пропускаю 0 и беру словНаСтранице
@@ -318,9 +318,9 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyDoMakeButton(long chatId) {
-        if (chatId == currentStudentId && adminId != currentStudentId) {
-            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
-        }
+//        if (chatId == currentStudentId && adminId != currentStudentId) {
+//            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
+//        }
         //тут достаю слова из категории do make
         List<Word> doMake = wordRepository.getDoMakeWords(); //!!!!!!!!!!!!!!!!!!!!!!!!!!!
         if (!doMake.isEmpty()) {

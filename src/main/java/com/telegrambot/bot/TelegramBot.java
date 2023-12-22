@@ -119,9 +119,9 @@ public class TelegramBot extends TelegramLongPollingBot {
                 return service.initializeNewStudent(update, chatId);
             }
             //если учитель пишет студенту просто разрешить это сообщение
-            if (chatId == adminId && chatId != service.getStudentId()) {
-                return List.of(new SendMessage(String.valueOf(service.getStudentId()), messageText));
-            }
+//            if (chatId == adminId && chatId != service.getStudentId()) {
+//                return List.of(new SendMessage(String.valueOf(service.getStudentId()), messageText));
+//            }
             //иначе это ответ на сообщение и надо его проверить
             return service.handleStudentMessage(chatId, messageText);
         }
