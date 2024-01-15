@@ -15,53 +15,8 @@ import java.util.List;
 
 @Component
 public class KeyboardGenerator {
-//    private final ReplyKeyboardMarkup replyKeyboardMarkup;
-//    private final InlineKeyboardMarkup inlineKeyboardMarkup;
+
     private final String speaker = "🔊";
-
-
-//    {
-//        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
-//        keyboard.setResizeKeyboard(true);
-//        keyboard.setOneTimeKeyboard(false);
-//
-//        List<KeyboardRow> keyboardRows = new ArrayList<>();
-//
-//        KeyboardRow row = new KeyboardRow();
-//        row.add("new words");
-//        row.add("all words");
-//        row.add("stop");
-//
-//        keyboardRows.add(row);
-//        keyboard.setKeyboard(keyboardRows);
-//        replyKeyboardMarkup = keyboard;
-//    }
-//
-//    {
-//        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
-//        InlineKeyboardButton yes = new InlineKeyboardButton("I've done it!");
-//        InlineKeyboardButton no = new InlineKeyboardButton("Remind later");
-//        yes.setCallbackData("hwYes");
-//        no.setCallbackData("hwNo");
-//        keyboardMarkup.setKeyboard(List.of(List.of(yes, no)));
-//        inlineKeyboardMarkup = keyboardMarkup;
-//    }
-
-//    public ReplyKeyboardMarkup getMainMenuKeyboard() {
-//        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
-//        keyboard.setResizeKeyboard(true);
-//        keyboard.setOneTimeKeyboard(false);
-//
-//        List<KeyboardRow> keyboardRows = new ArrayList<>();
-//
-//        KeyboardRow row = new KeyboardRow();
-//        row.add("study new");
-//        row.add("all words");
-//
-//        keyboardRows.add(row);
-//        keyboard.setKeyboard(keyboardRows);
-//        return replyKeyboardMarkup;
-//    }
 
     public InlineKeyboardMarkup getYesNoBoard() {
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
@@ -72,7 +27,6 @@ public class KeyboardGenerator {
         keyboardMarkup.setKeyboard(List.of(List.of(yes, no)));
         return keyboardMarkup;
     }
-
 
     public List<SendMessage> generateStudentList(List<Student> allStudents, long adminId) {
 

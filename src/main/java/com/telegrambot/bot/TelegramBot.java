@@ -39,7 +39,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         commandList.add(new BotCommand("/archive", "ARCHIVE"));
         commandList.add(new BotCommand("/do_make", "study do_make"));
         commandList.add(new BotCommand("/collocations", "study collocations"));
-        commandList.add(new BotCommand("/stop", "stop studying words"));
+//        commandList.add(new BotCommand("/stop", "stop studying words"));
         commandList.add(new BotCommand("/start", "INFO"));
         try {
             this.execute(new SetMyCommands(commandList, new BotCommandScopeDefault(), null));
@@ -130,7 +130,6 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (data.equals("noData")){
                 return null;
             }
-
             if (data.startsWith("hw")) {
                 return service.handleHomeworkReply(studentId, data);
             }

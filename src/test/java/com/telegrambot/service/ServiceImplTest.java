@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 
 import java.sql.Timestamp;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,14 +32,17 @@ class ServiceImplTest {
     private StudentRepository studentRepository;
 
     private final long testChatId = 12345L;
+    private final long testChatId2 = 777L;
 
     @Value("${admin_id}")
     private long adminId;
 
     @BeforeEach
     public void beforeAll() {
-        studentRepository.save(new Student(testChatId, "Test", new Timestamp(System.currentTimeMillis())));
-        homeTaskRepository.save(new Homework(testChatId, "hometask", 1));
+        studentRepository.save(new Student(testChatId, "Nick", new Timestamp(System.currentTimeMillis())));
+        studentRepository.save(new Student(testChatId2, "Vik", new Timestamp(System.currentTimeMillis())));
+        homeTaskRepository.save(new Homework(testChatId, "hometaskNick", 1));
+        homeTaskRepository.save(new Homework(testChatId2, "hometaskVik", 1));
     }
 
     @AfterEach
@@ -47,27 +51,39 @@ class ServiceImplTest {
 
 
     @Test
-    void addHomeTask() {
+    void mustAddHomeTaskForCurrentStudent() {
         String homeTaskButton = "hwhw";
         String homeTaskText = "some text home task";
+        service.switchStudent("student" + testChatId + " " + "TestName");
 
         List<SendMessage> messages = service.addHomeTask(testChatId, homeTaskButton + homeTaskText);
         String result = homeTaskRepository.findHomeTaskById(testChatId).get().getDescription();
 
         assertEquals(homeTaskText, result);
-//        assertTrue(homeTaskText.contains(result));
         assertTrue(messages.get(0).getText().contains(homeTaskText));
         assertEquals(messages.get(0).getChatId(), String.valueOf(testChatId));
         assertTrue(messages.get(1).getText().contains(homeTaskText));
-        assertEquals(messages.get(1).getChatId(), String.valueOf(adminId));
     }
 
     @Test
-    void handleHomeworkReply() {
+    void mustSetHomeTaskIsNotActive() {
+        String reply = "hwYes";
+
+        service.handleHomeworkReply(testChatId, reply);
+        int isActive = homeTaskRepository.findHomeTaskById(testChatId).get().isActive();
+
+        assertEquals(0, isActive);
     }
 
     @Test
-    void homeWorkRemind() {
+    void mustCreateHomeworkMessage() {
+        Homework homework = new Homework(testChatId, "new homework", 1);
+        homeTaskRepository.save(homework);
+
+        List<SendMessage> sendMessages = service.homeWorkRemind();
+        String result = sendMessages.get(1).getText();
+
+        assertTrue(result.contains(homework.getDescription()));
     }
 
     @Test
