@@ -15,39 +15,39 @@ import java.util.List;
 
 @Component
 public class KeyboardGenerator {
-    private final ReplyKeyboardMarkup replyKeyboardMarkup;
-    private final InlineKeyboardMarkup inlineKeyboardMarkup;
+//    private final ReplyKeyboardMarkup replyKeyboardMarkup;
+//    private final InlineKeyboardMarkup inlineKeyboardMarkup;
     private final String speaker = "🔊";
 
 
-    {
-        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
-        keyboard.setResizeKeyboard(true);
-        keyboard.setOneTimeKeyboard(false);
+//    {
+//        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
+//        keyboard.setResizeKeyboard(true);
+//        keyboard.setOneTimeKeyboard(false);
+//
+//        List<KeyboardRow> keyboardRows = new ArrayList<>();
+//
+//        KeyboardRow row = new KeyboardRow();
+//        row.add("new words");
+//        row.add("all words");
+//        row.add("stop");
+//
+//        keyboardRows.add(row);
+//        keyboard.setKeyboard(keyboardRows);
+//        replyKeyboardMarkup = keyboard;
+//    }
+//
+//    {
+//        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+//        InlineKeyboardButton yes = new InlineKeyboardButton("I've done it!");
+//        InlineKeyboardButton no = new InlineKeyboardButton("Remind later");
+//        yes.setCallbackData("hwYes");
+//        no.setCallbackData("hwNo");
+//        keyboardMarkup.setKeyboard(List.of(List.of(yes, no)));
+//        inlineKeyboardMarkup = keyboardMarkup;
+//    }
 
-        List<KeyboardRow> keyboardRows = new ArrayList<>();
-
-        KeyboardRow row = new KeyboardRow();
-        row.add("new words");
-        row.add("all words");
-        row.add("stop");
-
-        keyboardRows.add(row);
-        keyboard.setKeyboard(keyboardRows);
-        replyKeyboardMarkup = keyboard;
-    }
-
-    {
-        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
-        InlineKeyboardButton yes = new InlineKeyboardButton("I've done it!");
-        InlineKeyboardButton no = new InlineKeyboardButton("Remind later");
-        yes.setCallbackData("hwYes");
-        no.setCallbackData("hwNo");
-        keyboardMarkup.setKeyboard(List.of(List.of(yes, no)));
-        inlineKeyboardMarkup = keyboardMarkup;
-    }
-
-    public ReplyKeyboardMarkup getMainMenuKeyboard() {
+//    public ReplyKeyboardMarkup getMainMenuKeyboard() {
 //        ReplyKeyboardMarkup keyboard = new ReplyKeyboardMarkup();
 //        keyboard.setResizeKeyboard(true);
 //        keyboard.setOneTimeKeyboard(false);
@@ -60,17 +60,17 @@ public class KeyboardGenerator {
 //
 //        keyboardRows.add(row);
 //        keyboard.setKeyboard(keyboardRows);
-        return replyKeyboardMarkup;
-    }
+//        return replyKeyboardMarkup;
+//    }
 
     public InlineKeyboardMarkup getYesNoBoard() {
-//        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
-//        InlineKeyboardButton yes = new InlineKeyboardButton("YES");
-//        InlineKeyboardButton no = new InlineKeyboardButton("NO");
-//        yes.setCallbackData("buttonYes");
-//        no.setCallbackData("buttonNo");
-//        keyboardMarkup.setKeyboard(List.of(List.of(yes, no)));
-        return inlineKeyboardMarkup;
+        InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
+        InlineKeyboardButton yes = new InlineKeyboardButton("YES");
+        InlineKeyboardButton no = new InlineKeyboardButton("NO");
+        yes.setCallbackData("buttonYes");
+        no.setCallbackData("buttonNo");
+        keyboardMarkup.setKeyboard(List.of(List.of(yes, no)));
+        return keyboardMarkup;
     }
 
 
@@ -134,7 +134,7 @@ public class KeyboardGenerator {
         InlineKeyboardButton toList = new InlineKeyboardButton("to list>>");
         toList.setCallbackData("toList" + englishWord);
         listen.setCallbackData("listen");
-        keyboardMarkup.setKeyboard(List.of(List.of(listen, toList)));
+        keyboardMarkup.setKeyboard(List.of(List.of(toList, listen)));
         return keyboardMarkup;
     }
 

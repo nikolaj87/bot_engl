@@ -14,7 +14,12 @@ import com.telegrambot.repository.WordRepository;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -52,10 +57,6 @@ public class ServiceImpl implements Service {
         this.studentRepository = studentRepository;
         this.wordRepository = wordRepository;
         this.homeTaskRepository = homeTaskRepository;
-    }
-
-    public long getStudentId() {
-        return currentStudentId;
     }
 
     @Override
@@ -122,8 +123,6 @@ public class ServiceImpl implements Service {
                     Optional<Word> anyWordOptional = wordRepository.getAnyNewWordByStudentId(student.getId(), wordsOnPage);
                     if (anyWordOptional.isPresent()) {
                         Word anyWord = anyWordOptional.get();
-                        //c помошью кеша я буду отличать какие слова там лежат
-                        //если это слово имеет приставку 4 то это слова из @scheduler
                         cache.put(student.getId(), "4" + anyWord.getWordEnglish());
                         messages.add(new SendMessage(String.valueOf(student.getId()), generator.askMessage() + anyWord.getWordOriginal()));
                     }
@@ -132,114 +131,11 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public List<SendMessage> handleStudentMessage(long studentId, String messageText) {
-        //если учитель выбрал данного студента то идет урок и учитель получает сообщения студента
-        //также учитель сам себе не отправляет свои сообщения
-//        if (studentId == currentStudentId && adminId != currentStudentId) {
-//            return List.of(new SendMessage(String.valueOf(adminId), messageText));
-//        }
-        //если в кеше нет вопроса к студенту - wait message
-        if (!cache.cacheCheck(studentId)) {
-            return List.of(new SendMessage(String.valueOf(studentId), generator.waitMessage()));
-        }
-        //если есть в кеше - идет логика проверки ответа
-        String englishWordCache = cache.get(studentId);
-        cache.remove(studentId);
-        //сразу проверю ответ и добавлю сообщение после проверки - правильно или не правильный ответ
-        List<SendMessage> messagesForStudent = new ArrayList<>();
-
-
-        if (englishWordCache.substring(1).equals(messageText.trim().toLowerCase())) {
-            messagesForStudent.add(new SendMessage(String.valueOf(studentId), "✅ " + generator.correctMessage()));
-        } else {
-            messagesForStudent.add(new SendMessage(String.valueOf(studentId), "❌ " + generator.wrongMessage() + " Correct answer \n" + "✅ " + englishWordCache.substring(1)));
-        }
-        //в данном случай я задавал вопрос и кеш пуст и больше сообщений не будет
-        if (englishWordCache.startsWith("4")) {
-            return messagesForStudent;
-        }
-
-        if (cacheList.isEmpty(studentId)) {
-            //наполняем лист
-            if (englishWordCache.startsWith("1")) {
-                List<SendMessage> messages = studyNewButton(studentId, messageText);
-                messagesForStudent.add(messages.get(0));
-                messagesForStudent.add(messages.get(1));
-                return messagesForStudent;
-            }
-            if (englishWordCache.startsWith("2")) {
-                List<SendMessage> messages = studyAllButton(studentId, messageText);
-                messagesForStudent.add(messages.get(0));
-                messagesForStudent.add(messages.get(1));
-                return messagesForStudent;
-            }
-            if (englishWordCache.startsWith("3")) {
-                List<SendMessage> messages = studyArchiveButton(studentId, messageText);
-                messagesForStudent.add(messages.get(0));
-                messagesForStudent.add(messages.get(1));
-                return messagesForStudent;
-            }
-            if (englishWordCache.startsWith("5")) {
-                SendMessage sendMessage = new SendMessage(String.valueOf(studentId), "end of list");
-                messagesForStudent.add(sendMessage);
-                return messagesForStudent;
-            }
-            if (englishWordCache.startsWith("6")) {
-                SendMessage sendMessage = new SendMessage(String.valueOf(studentId), "end of list");
-                messagesForStudent.add(sendMessage);
-                return messagesForStudent;
-            }
-
-        }
-        //иначе кеш не пуст и я могу взять слово из кеш
-        Word anyWord = cacheList.getAndDelete(studentId);
-        if (englishWordCache.startsWith("1")) {
-            cache.put(studentId, "1" + anyWord.getWordEnglish());
-            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
-            messagesForStudent.add(sendMessage);
-            return messagesForStudent;
-        }
-        if (englishWordCache.startsWith("2")) {
-            cache.put(studentId, "2" + anyWord.getWordEnglish());
-            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
-            sendMessage.setReplyMarkup(keyboards.getAllWordButtons(anyWord.getWordEnglish()));
-            messagesForStudent.add(sendMessage);
-            return messagesForStudent;
-        }
-        if (englishWordCache.startsWith("3")) {
-            cache.put(studentId, "3" + anyWord.getWordEnglish());
-            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
-            sendMessage.setReplyMarkup(keyboards.getArchiveWordButtons(anyWord.getWordEnglish()));
-            messagesForStudent.add(sendMessage);
-            return messagesForStudent;
-        }
-        if (englishWordCache.startsWith("5")) {
-            cache.put(studentId, "5" + anyWord.getWordEnglish());
-            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
-            messagesForStudent.add(sendMessage);
-            return messagesForStudent;
-        }
-        if (englishWordCache.startsWith("6")) {
-            cache.put(studentId, "6" + anyWord.getGroupName());
-            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), anyWord.getWordEnglish().substring(anyWord.getWordEnglish().indexOf(" ")));
-            sendMessage.setReplyMarkup(keyboards.getDoMakeButtons());
-            messagesForStudent.add(sendMessage);
-            return messagesForStudent;
-        }
-        return messagesForStudent;
-    }
-
-    @Override
     public List<SendMessage> studyNewButton(long chatId, String messageText) {
-//        if (chatId == currentStudentId && adminId != currentStudentId) {
-//            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
-//        }
         List<Word> allNewWords = wordRepository.getAllNewWords(chatId);
         if (!allNewWords.isEmpty()) {
             SendMessage number = new SendMessage(String.valueOf(chatId), allNewWords.size() + " words found");
             Word anyWordFromList = cacheList.putAndReturnAny(chatId, allNewWords);
-            //c помошью кеша я буду отличать какие слова там лежат
-            //если это слово имеет приставку 1 то это новые слова
             cache.put(chatId, "1" + anyWordFromList.getWordEnglish());
             SendMessage someWord = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWordFromList.getWordOriginal());
             return List.of(number, someWord);
@@ -249,15 +145,10 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyAllButton(long chatId, String messageText) {
-//        if (chatId == currentStudentId && adminId != currentStudentId) {
-//            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
-//        }
         List<Word> allWords = wordRepository.getAllStudentWords(chatId);
         if (!allWords.isEmpty()) {
             SendMessage number = new SendMessage(String.valueOf(chatId), allWords.size() + " words found");
             Word anyWord = cacheList.putAndReturnAny(chatId, allWords);
-            //c помошью кеша я буду отличать какие слова там лежат
-            //если это слово имеет приставку 2 то это все слова
             cache.put(chatId, "2" + anyWord.getWordEnglish());
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
             sendMessage.setReplyMarkup(keyboards.getAllWordButtons(anyWord.getWordEnglish()));
@@ -268,15 +159,10 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyArchiveButton(long chatId, String messageText) {
-//        if (chatId == currentStudentId && adminId != currentStudentId) {
-//            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
-//        }
         List<Word> archiveWords = wordRepository.getArchiveStudentWords(chatId);
         if (!archiveWords.isEmpty()) {
             SendMessage number = new SendMessage(String.valueOf(chatId), archiveWords.size() + " words found");
             Word anyWord = cacheList.putAndReturnAny(chatId, archiveWords);
-            //c помошью кеша я буду отличать какие слова там лежат
-            //если это слово имеет приставку 3 то это слова из архива
             cache.put(chatId, "3" + anyWord.getWordEnglish());
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
             sendMessage.setReplyMarkup(keyboards.getArchiveWordButtons(anyWord.getWordEnglish()));
@@ -299,18 +185,11 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyCollocationsButtonPage(long chatId, String data) {
-//        if (chatId == currentStudentId && adminId != currentStudentId) {
-//            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
-//        }
         int page = Integer.parseInt(data.substring(12));
         int wordsToSkip = (page - 1) * wordsOnPage;
-        //тут достаю слова из категории collocations. Если 1 страница - пропускаю 0 и беру словНаСтранице
-        //если 3я - пропускаю 2 x слов_на_странице и беру количество слов_на_странице
         List<Word> collocations = wordRepository.getCollocationsWordsPage(wordsToSkip, wordsOnPage);
         SendMessage number = new SendMessage(String.valueOf(chatId), collocations.size() + " words found");
         Word anyWord = cacheList.putAndReturnAny(chatId, collocations);
-        //c помошью кеша я буду отличать какие слова там лежат
-        //если это слово имеет приставку 5 то это слова collocations
         cache.put(chatId, "5" + anyWord.getWordEnglish());
         SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
         return List.of(number, sendMessage);
@@ -318,15 +197,9 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> studyDoMakeButton(long chatId) {
-//        if (chatId == currentStudentId && adminId != currentStudentId) {
-//            return List.of(new SendMessage(String.valueOf(chatId), generator.laterMessage()));
-//        }
-        //тут достаю слова из категории do make
-        List<Word> doMake = wordRepository.getDoMakeWords(); //!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        List<Word> doMake = wordRepository.getDoMakeWords();
         if (!doMake.isEmpty()) {
             Word anyWord = cacheList.putAndReturnAny(chatId, doMake);
-            //c помошью кеша я буду отличать какие слова там лежат
-            //если это слово имеет приставку 6 то это слова doMake
             cache.put(chatId, "6" + anyWord.getGroupName());
             SendMessage number = new SendMessage(String.valueOf(chatId), doMake.size() + " words found");
             SendMessage task = new SendMessage(String.valueOf(chatId), "choose DO or MAKE");
@@ -339,22 +212,62 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public List<SendMessage> wordToArchive(long studentId, String word) {
-//        String wordToArchive = cache.get(studentId).substring(1);
-        wordRepository.wordToArchive(studentId, word);
-        return List.of(new SendMessage(String.valueOf(studentId), "\"" + word + "\" moved to archive"));
+    public EditMessageText wordToArchive(Update update) {
+        String wordToArchive = update.getCallbackQuery().getData().substring(9);
+        Message message = update.getCallbackQuery().getMessage();
+        Long chatId = message.getChatId();
+        Integer messageId = message.getMessageId();
+        String text = message.getText();
+        InlineKeyboardMarkup replyMarkup = message.getReplyMarkup();
+
+        InlineKeyboardButton inlineKeyboardButton =
+                message.getReplyMarkup().getKeyboard().get(0).get(0);
+        inlineKeyboardButton.setCallbackData("noData");
+        inlineKeyboardButton.setText("✅ archived");
+
+        EditMessageText editMessageText = new EditMessageText();
+        editMessageText.setChatId(String.valueOf(chatId));
+        editMessageText.setMessageId(messageId);
+        editMessageText.setText(text);
+        editMessageText.setReplyMarkup(replyMarkup);
+        wordRepository.wordToArchive(chatId, wordToArchive);
+
+        return editMessageText;
     }
 
     @Override
-    public List<SendMessage> wordToList(long studentId, String word) {
-//        String wordToArchive = cache.get(studentId).substring(1);
-        wordRepository.wordToList(studentId, word);
-        return List.of(new SendMessage(String.valueOf(studentId), "\"" + word + "\" moved to list"));
+    public EditMessageText wordToList(Update update) {
+        Message message = update.getCallbackQuery().getMessage();
+        int messageId = message.getMessageId();
+        String wordToMove = update.getCallbackQuery().getData().substring(6);
+        String messageText = message.getText();
+        long studentId = update.getCallbackQuery().getFrom().getId();
+        wordRepository.wordToList(studentId, wordToMove);
+
+        InlineKeyboardButton inlineKeyboardButton =
+                message.getReplyMarkup().getKeyboard().get(0).get(0);
+        inlineKeyboardButton.setCallbackData("noData");
+        inlineKeyboardButton.setText("✅ moved to list");
+
+        EditMessageText editMessageText = new EditMessageText();
+        editMessageText.setChatId(String.valueOf(studentId));
+        editMessageText.setMessageId(messageId);
+        editMessageText.setText(messageText);
+        editMessageText.setReplyMarkup(message.getReplyMarkup());
+        return editMessageText;
     }
 
     @Override
-    public List<SendMessage> wordListen(long studentId) {
-        return List.of(new SendMessage(String.valueOf(studentId), "soon :)"));
+    public EditMessageReplyMarkup wordListen(Update update) {
+        InlineKeyboardMarkup replyMarkup = update.getCallbackQuery().getMessage().getReplyMarkup();
+        InlineKeyboardButton inlineKeyboardButton = replyMarkup.getKeyboard().get(0).get(1);
+        inlineKeyboardButton.setText("soon:)");
+        inlineKeyboardButton.setCallbackData("noData");
+        EditMessageReplyMarkup editMessageReplyMarkup = new EditMessageReplyMarkup();
+        editMessageReplyMarkup.setReplyMarkup(replyMarkup);
+        editMessageReplyMarkup.setChatId(update.getCallbackQuery().getFrom().getId());
+        editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
+        return editMessageReplyMarkup;
     }
 
     @Override
@@ -465,7 +378,6 @@ public class ServiceImpl implements Service {
         SendMessage adminMessage = new SendMessage(String.valueOf(adminId), "переключено на студента" + studentName +
                 "\nТеперь он получает прямые сообщения и можно сохранить для него слова и домашку");
         SendMessage newStudentMessage = new SendMessage(String.valueOf(currentStudentId), generator.teacherEntersChat());
-//        System.out.println(currentStudentId);
         return List.of(adminMessage, previousStudentMessage, newStudentMessage);
     }
 
@@ -474,5 +386,92 @@ public class ServiceImpl implements Service {
         if (currentStudentId != adminId) {
             currentStudentId = adminId;
         }
+    }
+
+    @Override
+    public List<SendMessage> handleStudentMessage(long studentId, String messageText) {
+        if (!cache.cacheCheck(studentId)) {
+            return List.of(new SendMessage(String.valueOf(studentId), generator.waitMessage()));
+        }
+        String englishWordCache = cache.get(studentId);
+        cache.remove(studentId);
+        List<SendMessage> messagesForStudent = new ArrayList<>();
+
+
+        if (englishWordCache.substring(1).equals(messageText.trim().toLowerCase())) {
+            messagesForStudent.add(new SendMessage(String.valueOf(studentId), "✅ " + generator.correctMessage()));
+        } else {
+            messagesForStudent.add(new SendMessage(String.valueOf(studentId), "❌ " + generator.wrongMessage() + " Correct answer \n" + "✅ " + englishWordCache.substring(1)));
+        }
+        if (englishWordCache.startsWith("4")) {
+            return messagesForStudent;
+        }
+
+        if (cacheList.isEmpty(studentId)) {
+            if (englishWordCache.startsWith("1")) {
+                List<SendMessage> messages = studyNewButton(studentId, messageText);
+                messagesForStudent.add(messages.get(0));
+                messagesForStudent.add(messages.get(1));
+                return messagesForStudent;
+            }
+            if (englishWordCache.startsWith("2")) {
+                List<SendMessage> messages = studyAllButton(studentId, messageText);
+                messagesForStudent.add(messages.get(0));
+                messagesForStudent.add(messages.get(1));
+                return messagesForStudent;
+            }
+            if (englishWordCache.startsWith("3")) {
+                List<SendMessage> messages = studyArchiveButton(studentId, messageText);
+                messagesForStudent.add(messages.get(0));
+                messagesForStudent.add(messages.get(1));
+                return messagesForStudent;
+            }
+            if (englishWordCache.startsWith("5")) {
+                SendMessage sendMessage = new SendMessage(String.valueOf(studentId), "end of list");
+                messagesForStudent.add(sendMessage);
+                return messagesForStudent;
+            }
+            if (englishWordCache.startsWith("6")) {
+                SendMessage sendMessage = new SendMessage(String.valueOf(studentId), "end of list");
+                messagesForStudent.add(sendMessage);
+                return messagesForStudent;
+            }
+
+        }
+        Word anyWord = cacheList.getAndDelete(studentId);
+        if (englishWordCache.startsWith("1")) {
+            cache.put(studentId, "1" + anyWord.getWordEnglish());
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
+            messagesForStudent.add(sendMessage);
+            return messagesForStudent;
+        }
+        if (englishWordCache.startsWith("2")) {
+            cache.put(studentId, "2" + anyWord.getWordEnglish());
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
+            sendMessage.setReplyMarkup(keyboards.getAllWordButtons(anyWord.getWordEnglish()));
+            messagesForStudent.add(sendMessage);
+            return messagesForStudent;
+        }
+        if (englishWordCache.startsWith("3")) {
+            cache.put(studentId, "3" + anyWord.getWordEnglish());
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
+            sendMessage.setReplyMarkup(keyboards.getArchiveWordButtons(anyWord.getWordEnglish()));
+            messagesForStudent.add(sendMessage);
+            return messagesForStudent;
+        }
+        if (englishWordCache.startsWith("5")) {
+            cache.put(studentId, "5" + anyWord.getWordEnglish());
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
+            messagesForStudent.add(sendMessage);
+            return messagesForStudent;
+        }
+        if (englishWordCache.startsWith("6")) {
+            cache.put(studentId, "6" + anyWord.getGroupName());
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), anyWord.getWordEnglish().substring(anyWord.getWordEnglish().indexOf(" ")));
+            sendMessage.setReplyMarkup(keyboards.getDoMakeButtons());
+            messagesForStudent.add(sendMessage);
+            return messagesForStudent;
+        }
+        return messagesForStudent;
     }
 }

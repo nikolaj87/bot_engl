@@ -8,10 +8,7 @@ import java.util.Objects;
 @Table(name = "home_task")
 public class Homework {
     @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-//    @Column(name = "student_id")
-//    private long studentId;
     @Column(name = "description")
     private String description;
     @Column(name = "is_active")

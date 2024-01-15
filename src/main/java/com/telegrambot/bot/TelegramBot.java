@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
@@ -118,16 +121,15 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (messageText.equals("/start")) {
                 return service.initializeNewStudent(update, chatId);
             }
-            //если учитель пишет студенту просто разрешить это сообщение
-//            if (chatId == adminId && chatId != service.getStudentId()) {
-//                return List.of(new SendMessage(String.valueOf(service.getStudentId()), messageText));
-//            }
-            //иначе это ответ на сообщение и надо его проверить
             return service.handleStudentMessage(chatId, messageText);
         }
         if (update.hasCallbackQuery()) {
             long studentId = update.getCallbackQuery().getFrom().getId();
             String data = update.getCallbackQuery().getData();
+
+            if (data.equals("noData")){
+                return null;
+            }
 
             if (data.startsWith("hw")) {
                 return service.handleHomeworkReply(studentId, data);
@@ -136,13 +138,19 @@ public class TelegramBot extends TelegramLongPollingBot {
                 return service.switchStudent(data);
             }
             if (data.startsWith("toArchive")) {
-                return service.wordToArchive(studentId, data.substring(9));
+                EditMessageText editMessageText = service.wordToArchive(update);
+                editMessage(editMessageText);
+                return null;
             }
             if (data.startsWith("toList")) {
-                return service.wordToList(studentId, data.substring(6));
+                EditMessageText editMessageText = service.wordToList(update);
+                editMessage(editMessageText);
+                return null;
             }
             if (data.equals("listen")) {
-                return service.wordListen(studentId);
+                EditMessageReplyMarkup editMessageReplyMarkup = service.wordListen(update);
+                editKeyboard(editMessageReplyMarkup);
+                return null;
             }
             if (data.startsWith("doMake")) {
                 return service.handleStudentMessage(studentId, data.substring(6));
@@ -153,6 +161,22 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
         long chatId = update.getMessage().getChatId();
         return List.of(new SendMessage(String.valueOf(chatId), ";-)"));
+    }
+
+    private void editMessage (EditMessageText editMessageText) {
+        try {
+            execute(editMessageText);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void editKeyboard (EditMessageReplyMarkup editKeyboard) {
+        try {
+            execute(editKeyboard);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
     }
 
     private void sendMessages(List<SendMessage> messages) {

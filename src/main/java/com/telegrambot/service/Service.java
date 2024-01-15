@@ -2,6 +2,8 @@ package com.telegrambot.service;
 
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.List;
@@ -36,11 +38,11 @@ public interface Service {
     @Transactional
     List<SendMessage> studyArchiveButton(long chatId, String messageText);
     @Transactional
-    List<SendMessage> wordToArchive(long studentId, String word);
+    EditMessageText wordToArchive(Update update);
     @Transactional
-    List<SendMessage> wordToList(long studentId, String word);
+    EditMessageText wordToList(Update update);
     @Transactional
-    List<SendMessage> wordListen(long studentId);
+    EditMessageReplyMarkup wordListen(Update update);
     @Transactional
     List<SendMessage> deleteById(String request);
     @Transactional
