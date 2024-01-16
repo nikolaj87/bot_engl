@@ -199,9 +199,9 @@ public class ServiceImpl implements Service {
     public List<SendMessage> studyDoMakeButton(long chatId) {
         List<Word> doMake = wordRepository.getDoMakeWords();
         if (!doMake.isEmpty()) {
+            SendMessage number = new SendMessage(String.valueOf(chatId), doMake.size() + " words found");
             Word anyWord = cacheList.putAndReturnAny(chatId, doMake);
             cache.put(chatId, "6" + anyWord.getGroupName());
-            SendMessage number = new SendMessage(String.valueOf(chatId), doMake.size() + " words found");
             SendMessage task = new SendMessage(String.valueOf(chatId), "choose DO or MAKE");
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), anyWord.getWordEnglish().substring(anyWord.getWordEnglish().indexOf(" ")));
             sendMessage.setReplyMarkup(keyboards.getDoMakeButtons());

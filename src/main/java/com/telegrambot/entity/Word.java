@@ -33,6 +33,16 @@ public class Word {
         this.isArchive = isArchive;
     }
 
+    public Word(long id, String wordEnglish, String wordOriginal, long studentId, Timestamp createdAt, int isArchive, String groupName) {
+        this.id = id;
+        this.wordEnglish = wordEnglish;
+        this.wordOriginal = wordOriginal;
+        this.studentId = studentId;
+        this.createdAt = createdAt;
+        this.isArchive = isArchive;
+        this.groupName = groupName;
+    }
+
     public Word() {
     }
 
