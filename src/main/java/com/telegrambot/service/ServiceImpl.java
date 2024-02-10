@@ -321,12 +321,12 @@ public class ServiceImpl implements Service {
         return List.of(new SendMessage(String.valueOf(adminId), reply.toString()));
     }
 
-    @Override
-    public List<SendMessage> clearCache(long chatId) {
-        cache.remove(chatId);
-        cacheList.remove(chatId);
-        return List.of(new SendMessage(String.valueOf(chatId), generator.waitMessage()));
-    }
+//    @Override
+//    public List<SendMessage> clearCache(long chatId) {
+//        cache.remove(chatId);
+//        cacheList.remove(chatId);
+//        return List.of(new SendMessage(String.valueOf(chatId), generator.waitMessage()));
+//    }
 
     @Override
     public List<SendMessage> addWord(String text, long currentId) {

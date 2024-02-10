@@ -124,10 +124,6 @@ class ServiceImplTest {
         assertTrue(result.contains(savedWord1.getWordOriginal()));
     }
 
-    //    @Test
-//    void handleStudentMessage() {
-//    }
-//
     @Test
     void mustFindOnlyNewWord() {
         Word newWord = new Word(0L, "hello", "привет", testChatId,
@@ -257,10 +253,56 @@ class ServiceImplTest {
         assertEquals(0, result.getIsArchive());
     }
 
+    @Test
+    void mustDeleteWordById() {
+        Word archivedWord = new Word(0L, "wrapped", "завернутый", testChatId,
+                new Timestamp(System.currentTimeMillis()), 1);
+        Word savedWord = wordRepository.save(archivedWord);
+        String command = "dlt " + savedWord.getId();
 
-//    @Test
-//    void deleteById() {
-//    }
-//
+        Optional<Word> result1 = wordRepository.findById(savedWord.getId());
+        service.deleteById(command);
+        Optional<Word> result2 = wordRepository.findById(savedWord.getId());
+
+        assertTrue(result1.isPresent());
+        assertTrue(result2.isEmpty());
+    }
+
+    @Test
+    void mustReturnMessageWithLastWords() {
+        adminService.switchStudent("student" + testChatId + " " + "TestName");
+        Word firstWord = new Word(0L, "first", "первый", testChatId,
+                new Timestamp(System.currentTimeMillis()), 1);
+        Word secondWord = new Word(0L, "second", "второй", testChatId,
+                new Timestamp(System.currentTimeMillis()), 1);
+        Word thirdWord = new Word(0L, "third", "третий", testChatId,
+                new Timestamp(System.currentTimeMillis()), 1);
+        wordRepository.save(firstWord);
+        wordRepository.save(secondWord);
+        wordRepository.save(thirdWord);
+        Homework homework = homeTaskRepository.findHomeTaskById(testChatId).get();
+
+        List<SendMessage> lastWordsAndHomeTask = service.getLastWordsAndHomeTask();
+        String result = lastWordsAndHomeTask.get(0).getText();
+
+        assertTrue(result.contains(firstWord.getWordEnglish()));
+        assertTrue(result.contains(secondWord.getWordEnglish()));
+        assertTrue(result.contains(thirdWord.getWordEnglish()));
+        assertTrue(result.contains(homework.getDescription()));
+    }
+
+    @Test
+    void mustSaveNewWordForStudent() {
+        adminService.switchStudent("student" + testChatId + " " + "TestName");
+        String englishWordToSave = "monday";
+        String command = "+" + englishWordToSave + "+понедельник";
+
+        List<SendMessage> messages = service.addWord(command, testChatId);
+        List<Word> allWords = wordRepository.findAll();
+        Word newSavedWord = allWords.get(0);
+
+        assertEquals("a new word saved:\nmonday = понедельник", messages.get(0).getText());
+        assertEquals(englishWordToSave, newSavedWord.getWordEnglish());
+    }
 
 }

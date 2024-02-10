@@ -125,9 +125,9 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (messageText.equals("/do_make")) {
                 return service.studyDoMakeButton(chatId);
             }
-            if (messageText.equals("/stop")) {
-                return service.clearCache(chatId);
-            }
+//            if (messageText.equals("/stop")) {
+//                return service.clearCache(chatId);
+//            }
             if (messageText.equals("/print_list")) {
                 return service.printStudentList(chatId);
             }

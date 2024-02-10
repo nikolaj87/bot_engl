@@ -30,8 +30,8 @@ public interface Service {
     List<SendMessage> handleHomeworkReply(long studentId, String reply);
     @Transactional
     List<SendMessage> getLastWordsAndHomeTask();
-    @Transactional
-    List<SendMessage> clearCache(long chatId);
+//    @Transactional
+//    List<SendMessage> clearCache(long chatId);
     @Transactional
     List<SendMessage> studyArchiveButton(long chatId, String messageText);
     @Transactional
