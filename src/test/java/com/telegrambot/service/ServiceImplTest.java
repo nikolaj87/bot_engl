@@ -37,6 +37,8 @@ class ServiceImplTest {
     @Autowired
     private ServiceImpl service;
     @Autowired
+    private AdminServiceImpl adminService;
+    @Autowired
     private HomeTaskRepository homeTaskRepository;
     @Autowired
     private StudentRepository studentRepository;
@@ -44,6 +46,7 @@ class ServiceImplTest {
     private WordRepository wordRepository;
     @Autowired
     private KeyboardGenerator keyboard;
+
 
     private final long testChatId = 12345L;
     private final long testChatId2 = 777L;
@@ -71,7 +74,7 @@ class ServiceImplTest {
     void mustAddHomeTaskForCurrentStudent() {
         String homeTaskButton = "hwhw";
         String homeTaskText = "some text home task";
-        service.switchStudent("student" + testChatId + " " + "TestName");
+        adminService.switchStudent("student" + testChatId + " " + "TestName");
 
         List<SendMessage> messages = service.addHomeTask(testChatId, homeTaskButton + homeTaskText);
         String result = homeTaskRepository.findHomeTaskById(testChatId).get().getDescription();
@@ -96,7 +99,7 @@ class ServiceImplTest {
     void mustCreateHomeworkMessage() {
         Homework homework = new Homework(testChatId, "new homework", 1);
         homeTaskRepository.save(homework);
-        service.switchStudent("student" + adminId + " " + "TestName");
+        adminService.switchStudent("student" + adminId + " " + "TestName");
 
         List<SendMessage> sendMessages = service.homeWorkRemind();
         String result = sendMessages.stream()
@@ -218,24 +221,40 @@ class ServiceImplTest {
     }
 
     @Test
-    void wordToArchive() {
-//        Word notArchivedWord = new Word(0L, "lion", "лев", testChatId,
-//                new Timestamp(System.currentTimeMillis()), 0);
-//        Word savedWord = wordRepository.save(notArchivedWord);
-//        Update update = new Update();
-//        CallbackQuery callbackQuery = new CallbackQuery();
-//        callbackQuery.setData("toArchive" + notArchivedWord.getWordEnglish());
-//        update.setCallbackQuery(callbackQuery);
-//        Message message = new Message();
-//        message.setReplyMarkup((InlineKeyboardMarkup) keyboard.getAllWordButtons(notArchivedWord.getWordEnglish()));
-//        message.setChat(new Chat(777L, "some"));
-//        callbackQuery.setMessage(message);
-//
-//
-//        service.wordToArchive(update);
-//        Word result = wordRepository.findById(savedWord.getId()).get();
-//
-//        assertEquals(1, result.getIsArchive());
+    void mustMoveWordToArchive() {
+        Word notArchivedWord = new Word(0L, "lion", "лев", testChatId,
+                new Timestamp(System.currentTimeMillis()), 0);
+        Word savedWord = wordRepository.save(notArchivedWord);
+        String data = "toArchive" + notArchivedWord.getWordEnglish();
+        Message message = new Message();
+        message.setReplyMarkup((InlineKeyboardMarkup) keyboard.getAllWordButtons(notArchivedWord.getWordEnglish()));
+        message.setChat(new Chat(testChatId, "some"));
+        message.setText(data);
+        message.setMessageId(777);
+
+
+        service.wordToArchive(data, message);
+        Word result = wordRepository.findById(savedWord.getId()).get();
+
+        assertEquals(1, result.getIsArchive());
+    }
+
+    @Test
+    void mustMoveWordToList() {
+        Word archivedWord = new Word(0L, "bird", "птица", testChatId,
+                new Timestamp(System.currentTimeMillis()), 1);
+        Word savedWord = wordRepository.save(archivedWord);
+        String data = "toList" + archivedWord.getWordEnglish();
+        Message message = new Message();
+        message.setReplyMarkup((InlineKeyboardMarkup) keyboard.getAllWordButtons(archivedWord.getWordEnglish()));
+        message.setChat(new Chat(testChatId, "some"));
+        message.setText(data);
+        message.setMessageId(777);
+
+        service.wordToList(data, message);
+        Word result = wordRepository.findById(savedWord.getId()).get();
+
+        assertEquals(0, result.getIsArchive());
     }
 
 

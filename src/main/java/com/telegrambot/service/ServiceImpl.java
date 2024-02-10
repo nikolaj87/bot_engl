@@ -46,6 +46,7 @@ public class ServiceImpl implements Service {
 
     @Value("${admin_id}")
     private long adminId;
+
     @Value("${words_on_page}")
     private int wordsOnPage;
 
@@ -57,6 +58,14 @@ public class ServiceImpl implements Service {
         this.studentRepository = studentRepository;
         this.wordRepository = wordRepository;
         this.homeTaskRepository = homeTaskRepository;
+    }
+
+    public long getCurrentStudentId() {
+        return currentStudentId;
+    }
+
+    public void setCurrentStudentId(long currentStudentId) {
+        this.currentStudentId = currentStudentId;
     }
 
     @Override
@@ -212,9 +221,8 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public EditMessageText wordToArchive(Update update) {
-        String wordToArchive = update.getCallbackQuery().getData().substring(9);
-        Message message = update.getCallbackQuery().getMessage();
+    public EditMessageText wordToArchive(String data, Message message) {
+        String wordToArchive = data.substring(9);
         Long chatId = message.getChatId();
         Integer messageId = message.getMessageId();
         String text = message.getText();
@@ -236,12 +244,11 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public EditMessageText wordToList(Update update) {
-        Message message = update.getCallbackQuery().getMessage();
+    public EditMessageText wordToList(String data, Message message) {
         int messageId = message.getMessageId();
-        String wordToMove = update.getCallbackQuery().getData().substring(6);
+        String wordToMove = data.substring(6);
         String messageText = message.getText();
-        long studentId = update.getCallbackQuery().getFrom().getId();
+        long studentId = message.getChatId();
         wordRepository.wordToList(studentId, wordToMove);
 
         InlineKeyboardButton inlineKeyboardButton =
@@ -258,15 +265,15 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public EditMessageReplyMarkup wordListen(Update update) {
-        InlineKeyboardMarkup replyMarkup = update.getCallbackQuery().getMessage().getReplyMarkup();
+    public EditMessageReplyMarkup wordListen(String data, Message message) {
+        InlineKeyboardMarkup replyMarkup = message.getReplyMarkup();
         InlineKeyboardButton inlineKeyboardButton = replyMarkup.getKeyboard().get(0).get(1);
         inlineKeyboardButton.setText("soon:)");
         inlineKeyboardButton.setCallbackData("noData");
         EditMessageReplyMarkup editMessageReplyMarkup = new EditMessageReplyMarkup();
         editMessageReplyMarkup.setReplyMarkup(replyMarkup);
-        editMessageReplyMarkup.setChatId(update.getCallbackQuery().getFrom().getId());
-        editMessageReplyMarkup.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
+        editMessageReplyMarkup.setChatId(message.getChatId());
+        editMessageReplyMarkup.setMessageId(message.getMessageId());
         return editMessageReplyMarkup;
     }
 
@@ -339,8 +346,8 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public List<SendMessage> initializeNewStudent(Update update, long currentId) {
-        Student student = new Student(update.getMessage().getChatId(), update.getMessage().getFrom().getFirstName(),
+    public List<SendMessage> initializeNewStudent(Message message, long currentId) {
+        Student student = new Student(message.getChatId(), message.getFrom().getFirstName(),
                 new Timestamp(System.currentTimeMillis()));
         List<SendMessage> messages = new ArrayList<>();
         if (studentRepository.findById(currentId).isEmpty()) {
@@ -364,28 +371,46 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public List<SendMessage> getAllStudents(Update update) {
-        List<Student> allStudents = studentRepository.findAll();
-        return keyboards.generateStudentList(allStudents, adminId);
-    }
-
-    @Override
-    public List<SendMessage> switchStudent(String text) {
-        String studentId = text.substring(7, text.indexOf(" "));
-        String studentName = text.substring(text.indexOf(" ")).toUpperCase();
-        SendMessage previousStudentMessage = new SendMessage(String.valueOf(currentStudentId), generator.teacherLeftChat());
-        currentStudentId = Long.parseLong(studentId);
-        SendMessage adminMessage = new SendMessage(String.valueOf(adminId), "переключено на студента" + studentName +
-                "\nТеперь он получает прямые сообщения и можно сохранить для него слова и домашку");
-        SendMessage newStudentMessage = new SendMessage(String.valueOf(currentStudentId), generator.teacherEntersChat());
-        return List.of(adminMessage, previousStudentMessage, newStudentMessage);
-    }
-
-    @Override
     public void switchToAdminChat() {
         if (currentStudentId != adminId) {
             currentStudentId = adminId;
         }
+    }
+
+    @Override
+    public List<SendMessage> printStudentList(long chatId) {
+        List<Word> studentWords = wordRepository.getAllStudentWords(chatId);
+        if (studentWords.isEmpty()) {
+            return List.of(new SendMessage(String.valueOf(chatId), "found 0 words"));
+        }
+        StringBuilder reply = new StringBuilder();
+        reply
+                .append("list of your words: ")
+                .append("\n");
+
+        List<SendMessage> messages = new LinkedList<>();
+
+        for (int i = 1; i <= studentWords.size(); i++) {
+            reply
+                    .append(i)
+                    .append(". ")
+                    .append(studentWords.get(i - 1).getWordEnglish())
+                    .append(" - ")
+                    .append(studentWords.get(i - 1).getWordOriginal())
+                    .append("\n");
+            if (i % wordsOnPage == 0) {
+                messages.add(new SendMessage(String.valueOf(chatId), reply.toString()));
+                reply.setLength(0);
+            }
+        }
+        Optional<Homework> homeworkOptional = homeTaskRepository.findHomeTaskById(chatId);
+        if (homeworkOptional.isPresent()) {
+            reply.append("Last homework: ")
+                    .append(homeworkOptional.get().getDescription());
+        }
+        messages.add(new SendMessage(String.valueOf(chatId), reply.toString()));
+
+        return messages;
     }
 
     @Override

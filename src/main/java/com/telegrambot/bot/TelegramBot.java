@@ -1,6 +1,8 @@
 package com.telegrambot.bot;
 
 import com.telegrambot.config.BotConfig;
+import com.telegrambot.service.AdminService;
+import com.telegrambot.service.GptService;
 import com.telegrambot.service.ServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -24,16 +26,21 @@ import java.util.List;
 public class TelegramBot extends TelegramLongPollingBot {
     private final BotConfig botConfig;
     private final ServiceImpl service;
+    private final AdminService adminService;
+    private final GptService gptService;
+
 
     @Value("${admin_id}")
     private long adminId;
     private static final String REG_EX_ADD_WORD = "\\+.{2,}\\+.{2,}";       //  +...+...
 
-    public TelegramBot(BotConfig botConfig, ServiceImpl service) {
+    public TelegramBot(BotConfig botConfig, ServiceImpl service, AdminService adminService, GptService gptService) {
         this.botConfig = botConfig;
         this.service = service;
+        this.adminService = adminService;
+        this.gptService = gptService;
         List<BotCommand> commandList = new ArrayList<>();
-        commandList.add(new BotCommand("/switch_student", "admin switch student"));
+        commandList.add(new BotCommand("/print_list", "show me my list!"));
         commandList.add(new BotCommand("/my_words", "ALL WORDS"));
         commandList.add(new BotCommand("/last_words", "NEW WORDS"));
         commandList.add(new BotCommand("/archive", "ARCHIVE"));
@@ -83,12 +90,15 @@ public class TelegramBot extends TelegramLongPollingBot {
             long chatId = update.getMessage().getChatId();
             String messageText = update.getMessage().getText();
 
-            if (update.getMessage().getChatId() == adminId) {
+            if (chatId == adminId) {
+                if (messageText.equalsIgnoreCase("admin")) {
+                    return adminService.adminCommand();
+                }
+                if (messageText.toLowerCase().matches("test\\s?\\d*")) {
+                    return gptService.createFillTheGaps(messageText);
+                }
                 if (messageText.toLowerCase().startsWith("hwhw")) {
                     return service.addHomeTask(chatId, messageText);
-                }
-                if (messageText.equals("/switch_student")) {
-                    return service.getAllStudents(update);
                 }
                 if (messageText.toLowerCase().startsWith("swsw")) {
                     return service.getLastWordsAndHomeTask();
@@ -118,14 +128,21 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (messageText.equals("/stop")) {
                 return service.clearCache(chatId);
             }
+            if (messageText.equals("/print_list")) {
+                return service.printStudentList(chatId);
+            }
             if (messageText.equals("/start")) {
-                return service.initializeNewStudent(update, chatId);
+                return service.initializeNewStudent(update.getMessage(), chatId);
+            }
+            if (messageText.toLowerCase().startsWith("gpt ")) {
+                return gptService.createContext(chatId, messageText);
             }
             return service.handleStudentMessage(chatId, messageText);
         }
         if (update.hasCallbackQuery()) {
             long studentId = update.getCallbackQuery().getFrom().getId();
             String data = update.getCallbackQuery().getData();
+            Message message = update.getCallbackQuery().getMessage();
 
             if (data.equals("noData")){
                 return null;
@@ -134,20 +151,20 @@ public class TelegramBot extends TelegramLongPollingBot {
                 return service.handleHomeworkReply(studentId, data);
             }
             if (data.startsWith("student")) {
-                return service.switchStudent(data);
+                return adminService.switchStudent(data);
             }
             if (data.startsWith("toArchive")) {
-                EditMessageText editMessageText = service.wordToArchive(update);
+                EditMessageText editMessageText = service.wordToArchive(data, message);
                 editMessage(editMessageText);
                 return null;
             }
             if (data.startsWith("toList")) {
-                EditMessageText editMessageText = service.wordToList(update);
+                EditMessageText editMessageText = service.wordToList(data, message);
                 editMessage(editMessageText);
                 return null;
             }
             if (data.equals("listen")) {
-                EditMessageReplyMarkup editMessageReplyMarkup = service.wordListen(update);
+                EditMessageReplyMarkup editMessageReplyMarkup = service.wordListen(data, message);
                 editKeyboard(editMessageReplyMarkup);
                 return null;
             }

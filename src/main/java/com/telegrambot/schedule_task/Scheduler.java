@@ -14,17 +14,17 @@ public class Scheduler {
     }
 
 //    @Scheduled(cron = "0 0 8,13,17 * * *")
-//    public void sendTasks () {
-//        telegramBot.sendTasks();
-//    }
-//
+    public void sendTasks () {
+        telegramBot.sendTasks();
+    }
+
 //    @Scheduled(cron = "0 0 18 * * *")
-//    public void homeWorkRemind () {
-//        telegramBot.homeWorkRemind();
-//    }
-//
+    public void homeWorkRemind () {
+        telegramBot.homeWorkRemind();
+    }
+
 //    @Scheduled(cron = "0 0 2 * * *")
-//    public void switchToAdminChat () {
-//        telegramBot.switchToAdminChat();
-//    }
+    public void switchToAdminChat () {
+        telegramBot.switchToAdminChat();
+    }
 }
