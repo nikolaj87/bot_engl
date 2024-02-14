@@ -228,7 +228,7 @@ public class ServiceImpl implements Service {
             Word anyWord = cacheList.putAndReturnAny(chatId, doMake);
             cache.put(chatId, anyWord);
             SendMessage task = new SendMessage(String.valueOf(chatId), "choose DO or MAKE");
-            SendMessage sendMessage = new SendMessage(String.valueOf(chatId), anyWord.getWordEnglish().substring(anyWord.getWordEnglish().indexOf(" ")));
+            SendMessage sendMessage = new SendMessage(String.valueOf(chatId), anyWord.getWordOriginal().substring(anyWord.getWordOriginal().indexOf(" ")));
             sendMessage.setReplyMarkup(keyboards.getDoMakeButtons());
             return List.of(number, task, sendMessage);
         }
@@ -424,6 +424,7 @@ public class ServiceImpl implements Service {
 
     @Override
     public List<SendMessage> handleStudentMessage(long studentId, String messageText) {
+        System.out.println(messageText);
         if (!cache.cacheCheck(studentId)) {
             return List.of(new SendMessage(String.valueOf(studentId), generator.waitMessage()));
         }
@@ -469,7 +470,7 @@ public class ServiceImpl implements Service {
             return messagesForStudent;
         }
         if (anyWordFromList.getGroupName().equals("do") || anyWordFromList.getGroupName().equals("make")) {
-            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), anyWordFromList.getWordEnglish().substring(anyWordFromList.getWordEnglish().indexOf(" ")));
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), anyWordFromList.getWordOriginal().substring(anyWordFromList.getWordOriginal().indexOf(" ")));
             sendMessage.setReplyMarkup(keyboards.getDoMakeButtons());
             messagesForStudent.add(sendMessage);
             return messagesForStudent;

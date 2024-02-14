@@ -37,22 +37,23 @@ public class GptServiceImpl implements GptService {
         String content = response.getChoices().get(0).getMessage().getContent();
         return List.of(new SendMessage(String.valueOf(chatId), content));
     }
-
+//testb115
     @Override
     public List<SendMessage> createFillTheGaps(String messageText) {
-        String number = messageText.substring(4).trim();
+        String level = messageText.substring(4,6);
+        String number = messageText.substring(6).trim();
         int numberLong = Integer.parseInt(number);
         long currentStudentId = service.getCurrentStudentId();
         List<Word> lastWords = wordRepository.getLastWords(currentStudentId, numberLong);
         Collections.shuffle(lastWords);
-        String messageForGPT = createMessageFillTheGaps(lastWords);
+        String messageForGPT = createMessageFillTheGaps(lastWords, level);
         ChatGPTRequest request = new ChatGPTRequest(model, messageForGPT);
         ChatGPTResponse response = restTemplate.postForObject(url, request, ChatGPTResponse.class);
         String studentContent = response.getChoices().get(0).getMessage().getContent();
         return List.of(new SendMessage(String.valueOf(adminId), studentContent));
     }
 
-    private String createMessageFillTheGaps(List<Word> lastWords) {
+    private String createMessageFillTheGaps(List<Word> lastWords, String level) {
         StringBuilder words = new StringBuilder();
         int size = lastWords.size();
         for (Word word : lastWords) {
@@ -62,9 +63,11 @@ public class GptServiceImpl implements GptService {
         return
                 "Я даю тебе " + size + " слов на английском языке - " + words + ". " +
                         "Tвоя задача придумать " + size + " предложений на английском языке с использованием " +
-                        "этих слов, но сами слова нужно заменить вот таким прочерком - _______. 1 слово - 1 предложение." +
-                        " Длина предложений 6 - 12 слов. Уровень английского A2 - B1. " +
-                        "Дай мне только эти " + size + " предложения без комментариев";
+                        "этих слов. Исспользуй только одно слово в одном предложении" +
+                        " Длина предложений 6 - 12 слов. Уровень английского " + level + ". " +
+                        "А теперь повтори свои " + size + " предложений, но те слова, которые я тебе дал, " +
+                        "замени на такой прочерк ________." +
+                        "Не добалвяй никаких лишних комментариев";
     }
 
     private String createMessageForChat(String userText) {

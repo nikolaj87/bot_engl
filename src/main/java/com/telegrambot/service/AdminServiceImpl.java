@@ -39,7 +39,7 @@ public class AdminServiceImpl implements AdminService {
         String studentName = text.substring(text.indexOf(" ")).toUpperCase();
         service.setCurrentStudentId(Long.parseLong(studentId));
         SendMessage adminMessage = new SendMessage(String.valueOf(adminId), "переключено на студента" + studentName +
-                "\nТеперь он получает прямые сообщения и можно сохранить для него слова и домашку");
+                "\nТеперь можно сохранить для него слова и домашку");
         return List.of(adminMessage);
     }
 }

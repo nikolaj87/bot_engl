@@ -94,7 +94,7 @@ public class TelegramBot extends TelegramLongPollingBot {
                 if (messageText.equalsIgnoreCase("admin")) {
                     return adminService.adminCommand();
                 }
-                if (messageText.toLowerCase().matches("test\\s?\\d*")) {
+                if (messageText.toLowerCase().matches("test[abc][12]\\d*")) {
                     return gptService.createFillTheGaps(messageText);
                 }
                 if (messageText.toLowerCase().startsWith("hwhw")) {
@@ -125,9 +125,6 @@ public class TelegramBot extends TelegramLongPollingBot {
             if (messageText.equals("/do_make")) {
                 return service.studyDoMakeButton(chatId);
             }
-//            if (messageText.equals("/stop")) {
-//                return service.clearCache(chatId);
-//            }
             if (messageText.equals("/print_list")) {
                 return service.printStudentList(chatId);
             }
