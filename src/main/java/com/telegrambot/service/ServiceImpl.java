@@ -132,7 +132,7 @@ public class ServiceImpl implements Service {
                     Optional<Word> anyWordOptional = wordRepository.getAnyNewWordByStudentId(student.getId(), wordsOnPage);
                     if (anyWordOptional.isPresent()) {
                         Word anyWord = anyWordOptional.get();
-                        cache.put(student.getId(), "4" + anyWord.getWordEnglish());
+                        cache.put(student.getId(), anyWord);
                         messages.add(new SendMessage(String.valueOf(student.getId()), generator.askMessage() + anyWord.getWordOriginal()));
                     }
                 });
@@ -143,9 +143,10 @@ public class ServiceImpl implements Service {
     public List<SendMessage> studyNewButton(long chatId, String messageText) {
         List<Word> allNewWords = wordRepository.getAllNewWords(chatId);
         if (!allNewWords.isEmpty()) {
+            allNewWords.forEach(word -> word.setGroupName("new"));
             SendMessage number = new SendMessage(String.valueOf(chatId), allNewWords.size() + " words found");
             Word anyWordFromList = cacheList.putAndReturnAny(chatId, allNewWords);
-            cache.put(chatId, "1" + anyWordFromList.getWordEnglish());
+            cache.put(chatId, anyWordFromList);
             SendMessage someWord = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWordFromList.getWordOriginal());
             return List.of(number, someWord);
         }
@@ -156,9 +157,10 @@ public class ServiceImpl implements Service {
     public List<SendMessage> studyAllButton(long chatId, String messageText) {
         List<Word> allWords = wordRepository.getAllStudentWords(chatId);
         if (!allWords.isEmpty()) {
+            allWords.forEach(word -> word.setGroupName("all"));
             SendMessage number = new SendMessage(String.valueOf(chatId), allWords.size() + " words found");
             Word anyWord = cacheList.putAndReturnAny(chatId, allWords);
-            cache.put(chatId, "2" + anyWord.getWordEnglish());
+            cache.put(chatId, anyWord);
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
             sendMessage.setReplyMarkup(keyboards.getAllWordButtons(anyWord.getWordEnglish()));
             return List.of(number, sendMessage);
@@ -170,9 +172,10 @@ public class ServiceImpl implements Service {
     public List<SendMessage> studyArchiveButton(long chatId, String messageText) {
         List<Word> archiveWords = wordRepository.getArchiveStudentWords(chatId);
         if (!archiveWords.isEmpty()) {
+            archiveWords.forEach(word -> word.setGroupName("archive"));
             SendMessage number = new SendMessage(String.valueOf(chatId), archiveWords.size() + " words found");
             Word anyWord = cacheList.putAndReturnAny(chatId, archiveWords);
-            cache.put(chatId, "3" + anyWord.getWordEnglish());
+            cache.put(chatId, anyWord);
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
             sendMessage.setReplyMarkup(keyboards.getArchiveWordButtons(anyWord.getWordEnglish()));
             return List.of(number, sendMessage);
@@ -199,7 +202,7 @@ public class ServiceImpl implements Service {
         List<Word> collocations = wordRepository.getCollocationsWordsPage(wordsToSkip, wordsOnPage);
         SendMessage number = new SendMessage(String.valueOf(chatId), collocations.size() + " words found");
         Word anyWord = cacheList.putAndReturnAny(chatId, collocations);
-        cache.put(chatId, "5" + anyWord.getWordEnglish());
+        cache.put(chatId, anyWord);
         SendMessage sendMessage = new SendMessage(String.valueOf(chatId), generator.askMessage() + anyWord.getWordOriginal());
         return List.of(number, sendMessage);
     }
@@ -210,7 +213,7 @@ public class ServiceImpl implements Service {
         if (!doMake.isEmpty()) {
             SendMessage number = new SendMessage(String.valueOf(chatId), doMake.size() + " words found");
             Word anyWord = cacheList.putAndReturnAny(chatId, doMake);
-            cache.put(chatId, "6" + anyWord.getGroupName());
+            cache.put(chatId, anyWord);
             SendMessage task = new SendMessage(String.valueOf(chatId), "choose DO or MAKE");
             SendMessage sendMessage = new SendMessage(String.valueOf(chatId), anyWord.getWordEnglish().substring(anyWord.getWordEnglish().indexOf(" ")));
             sendMessage.setReplyMarkup(keyboards.getDoMakeButtons());
@@ -321,13 +324,6 @@ public class ServiceImpl implements Service {
         return List.of(new SendMessage(String.valueOf(adminId), reply.toString()));
     }
 
-//    @Override
-//    public List<SendMessage> clearCache(long chatId) {
-//        cache.remove(chatId);
-//        cacheList.remove(chatId);
-//        return List.of(new SendMessage(String.valueOf(chatId), generator.waitMessage()));
-//    }
-
     @Override
     public List<SendMessage> addWord(String text, long currentId) {
         String wordEnglish = text.substring(1, text.lastIndexOf("+")).replaceAll("[.!]", "").trim().toLowerCase();
@@ -418,81 +414,49 @@ public class ServiceImpl implements Service {
         if (!cache.cacheCheck(studentId)) {
             return List.of(new SendMessage(String.valueOf(studentId), generator.waitMessage()));
         }
-        String englishWordCache = cache.get(studentId);
+        Word lastWord = cache.get(studentId);
         cache.remove(studentId);
         List<SendMessage> messagesForStudent = new ArrayList<>();
 
-
-        if (englishWordCache.substring(1).equals(messageText.trim().toLowerCase())) {
+        if (lastWord.getWordEnglish().equals(messageText.trim().toLowerCase())) {
             messagesForStudent.add(new SendMessage(String.valueOf(studentId), "✅ " + generator.correctMessage()));
         } else {
-            messagesForStudent.add(new SendMessage(String.valueOf(studentId), "❌ " + generator.wrongMessage() + " Correct answer \n" + "✅ " + englishWordCache.substring(1)));
+            messagesForStudent.add(new SendMessage(String.valueOf(studentId), "❌ " + generator.wrongMessage() + " Correct answer \n" + "✅ " + lastWord.getWordEnglish()));
         }
-        if (englishWordCache.startsWith("4")) {
+        if (lastWord.getGroupName().equals("bot")) {
             return messagesForStudent;
         }
-
         if (cacheList.isEmpty(studentId)) {
-            if (englishWordCache.startsWith("1")) {
-                List<SendMessage> messages = studyNewButton(studentId, messageText);
-                messagesForStudent.add(messages.get(0));
-                messagesForStudent.add(messages.get(1));
-                return messagesForStudent;
-            }
-            if (englishWordCache.startsWith("2")) {
-                List<SendMessage> messages = studyAllButton(studentId, messageText);
-                messagesForStudent.add(messages.get(0));
-                messagesForStudent.add(messages.get(1));
-                return messagesForStudent;
-            }
-            if (englishWordCache.startsWith("3")) {
-                List<SendMessage> messages = studyArchiveButton(studentId, messageText);
-                messagesForStudent.add(messages.get(0));
-                messagesForStudent.add(messages.get(1));
-                return messagesForStudent;
-            }
-            if (englishWordCache.startsWith("5")) {
-                SendMessage sendMessage = new SendMessage(String.valueOf(studentId), "end of list");
-                messagesForStudent.add(sendMessage);
-                return messagesForStudent;
-            }
-            if (englishWordCache.startsWith("6")) {
-                SendMessage sendMessage = new SendMessage(String.valueOf(studentId), "end of list");
-                messagesForStudent.add(sendMessage);
-                return messagesForStudent;
-            }
-
-        }
-        Word anyWord = cacheList.getAndDelete(studentId);
-        if (englishWordCache.startsWith("1")) {
-            cache.put(studentId, "1" + anyWord.getWordEnglish());
-            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), "end of the list");
             messagesForStudent.add(sendMessage);
             return messagesForStudent;
         }
-        if (englishWordCache.startsWith("2")) {
-            cache.put(studentId, "2" + anyWord.getWordEnglish());
-            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
-            sendMessage.setReplyMarkup(keyboards.getAllWordButtons(anyWord.getWordEnglish()));
+        Word anyWordFromList = cacheList.getAndDelete(studentId);
+        cache.put(studentId, anyWordFromList);
+        if (anyWordFromList.getGroupName().equals("new")) {
+            messagesForStudent.add(new SendMessage(String.valueOf(studentId),
+                    generator.askMessage() + anyWordFromList.getWordOriginal()));
+            return messagesForStudent;
+        }
+        if (anyWordFromList.getGroupName().equals("all")) {
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWordFromList.getWordOriginal());
+            sendMessage.setReplyMarkup(keyboards.getAllWordButtons(anyWordFromList.getWordEnglish()));
             messagesForStudent.add(sendMessage);
             return messagesForStudent;
         }
-        if (englishWordCache.startsWith("3")) {
-            cache.put(studentId, "3" + anyWord.getWordEnglish());
-            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
-            sendMessage.setReplyMarkup(keyboards.getArchiveWordButtons(anyWord.getWordEnglish()));
+        if (anyWordFromList.getGroupName().equals("archive")) {
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWordFromList.getWordOriginal());
+            sendMessage.setReplyMarkup(keyboards.getArchiveWordButtons(anyWordFromList.getWordEnglish()));
             messagesForStudent.add(sendMessage);
             return messagesForStudent;
         }
-        if (englishWordCache.startsWith("5")) {
-            cache.put(studentId, "5" + anyWord.getWordEnglish());
-            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), generator.askMessage() + anyWord.getWordOriginal());
-            messagesForStudent.add(sendMessage);
+        if (anyWordFromList.getGroupName().equals("collocations1")) {
+            messagesForStudent.add(new SendMessage(String.valueOf(studentId),
+                    generator.askMessage() + anyWordFromList.getWordOriginal()));
             return messagesForStudent;
         }
-        if (englishWordCache.startsWith("6")) {
-            cache.put(studentId, "6" + anyWord.getGroupName());
-            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), anyWord.getWordEnglish().substring(anyWord.getWordEnglish().indexOf(" ")));
+        if (anyWordFromList.getGroupName().equals("do") || anyWordFromList.getGroupName().equals("make")) {
+            SendMessage sendMessage = new SendMessage(String.valueOf(studentId), anyWordFromList.getWordEnglish().substring(anyWordFromList.getWordEnglish().indexOf(" ")));
             sendMessage.setReplyMarkup(keyboards.getDoMakeButtons());
             messagesForStudent.add(sendMessage);
             return messagesForStudent;
