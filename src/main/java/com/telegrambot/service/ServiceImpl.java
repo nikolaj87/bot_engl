@@ -12,12 +12,14 @@ import com.telegrambot.repository.StudentRepository;
 import com.telegrambot.repository.WordRepository;
 
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
@@ -49,6 +51,9 @@ public class ServiceImpl implements Service {
 
     @Value("${words_on_page}")
     private int wordsOnPage;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public ServiceImpl(Cache cache, CacheList cacheList, MessageGenerator generator, KeyboardGenerator keyboards, StudentRepository studentRepository, WordRepository wordRepository, HomeTaskRepository homeTaskRepository) {
         this.cache = cache;
@@ -132,6 +137,8 @@ public class ServiceImpl implements Service {
                     Optional<Word> anyWordOptional = wordRepository.getAnyNewWordByStudentId(student.getId(), wordsOnPage);
                     if (anyWordOptional.isPresent()) {
                         Word anyWord = anyWordOptional.get();
+                        entityManager.detach(anyWord);
+                        anyWord.setGroupName("bot");
                         cache.put(student.getId(), anyWord);
                         messages.add(new SendMessage(String.valueOf(student.getId()), generator.askMessage() + anyWord.getWordOriginal()));
                     }
@@ -143,6 +150,7 @@ public class ServiceImpl implements Service {
     public List<SendMessage> studyNewButton(long chatId, String messageText) {
         List<Word> allNewWords = wordRepository.getAllNewWords(chatId);
         if (!allNewWords.isEmpty()) {
+            allNewWords.forEach(word -> entityManager.detach(word));
             allNewWords.forEach(word -> word.setGroupName("new"));
             SendMessage number = new SendMessage(String.valueOf(chatId), allNewWords.size() + " words found");
             Word anyWordFromList = cacheList.putAndReturnAny(chatId, allNewWords);
@@ -157,6 +165,7 @@ public class ServiceImpl implements Service {
     public List<SendMessage> studyAllButton(long chatId, String messageText) {
         List<Word> allWords = wordRepository.getAllStudentWords(chatId);
         if (!allWords.isEmpty()) {
+            allWords.forEach(word -> entityManager.detach(word));
             allWords.forEach(word -> word.setGroupName("all"));
             SendMessage number = new SendMessage(String.valueOf(chatId), allWords.size() + " words found");
             Word anyWord = cacheList.putAndReturnAny(chatId, allWords);
@@ -172,6 +181,7 @@ public class ServiceImpl implements Service {
     public List<SendMessage> studyArchiveButton(long chatId, String messageText) {
         List<Word> archiveWords = wordRepository.getArchiveStudentWords(chatId);
         if (!archiveWords.isEmpty()) {
+            archiveWords.forEach(word -> entityManager.detach(word));
             archiveWords.forEach(word -> word.setGroupName("archive"));
             SendMessage number = new SendMessage(String.valueOf(chatId), archiveWords.size() + " words found");
             Word anyWord = cacheList.putAndReturnAny(chatId, archiveWords);
@@ -189,7 +199,10 @@ public class ServiceImpl implements Service {
         if (collocationWordsNumber == 0) {
             return List.of(new SendMessage(String.valueOf(chatId), "no words found"));
         }
-        int pagesNumber = collocationWordsNumber / wordsOnPage + 1;
+        int pagesNumber = collocationWordsNumber / wordsOnPage;
+        if (collocationWordsNumber % wordsOnPage != 0) {
+            pagesNumber++;
+        }
         SendMessage sendMessage = new SendMessage(String.valueOf(chatId), "choose collocations page");
         sendMessage.setReplyMarkup(keyboards.addPageNumberButtons(pagesNumber));
         return List.of(sendMessage);

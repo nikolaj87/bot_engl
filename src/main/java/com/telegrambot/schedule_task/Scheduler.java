@@ -13,17 +13,17 @@ public class Scheduler {
         this.telegramBot = telegramBot;
     }
 
-    @Scheduled(cron = "0 0 8,13,17 * * *")
+//    @Scheduled(cron = "0 0 8,13,17 * * *")
     public void sendTasks () {
         telegramBot.sendTasks();
     }
 
-    @Scheduled(cron = "0 0 18 * * *")
+//    @Scheduled(cron = "0 0 18 * * *")
     public void homeWorkRemind () {
         telegramBot.homeWorkRemind();
     }
 
-    @Scheduled(cron = "0 0 2 * * *")
+//    @Scheduled(cron = "0 0 2 * * *")
     public void switchToAdminChat () {
         telegramBot.switchToAdminChat();
     }
